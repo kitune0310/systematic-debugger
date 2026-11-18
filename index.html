@@ -240,6 +240,21 @@ function codePage(){ensureCodeFiles();if(!activeCodeId&&state.codeFiles.length)a
   コードを検査すると、エラー情報がここに表示されます。
 </div>
 </div>
+<div class="code-panel section-gap">
+  <div class="card-title">
+    <h2>ERROR ANALYSIS</h2>
+    <span class="tag">ROOT CAUSE</span>
+  </div>
+
+  <div id="errorAnalysis" class="code-status">
+    エラーを検出すると、原因と修正候補が表示されます。
+  </div>
+
+  <div id="errorSuggestion" class="code-status"
+       style="margin-top:12px">
+    修正候補：まだありません。
+  </div>
+</div>
 <div class="code-bottom"><div class="code-panel"><h3>SEARCH RESULTS</h3><div id="searchResults" class="code-status">検索語を入力すると、このファイル内を検索します。</div></div><div class="code-panel"><h3>DIFF PREVIEW</h3><div id="diffInfo" class="code-status">保存前の変更差分をここに表示します。</div><button class="btn" style="margin-top:8px" onclick="previewCodeDiff()" ${f?'':'disabled'}>差分を更新</button></div></div></section></div>`}
 function lineNumberText(v=''){return Array.from({length:Math.max(1,String(v).split('\n').length)},(_,i)=>i+1).join('\n')}
 function languageLabel(n){const e=(n.split('.').pop()||'text').toLowerCase();return ({js:'JS',mjs:'JS',html:'HTML',htm:'HTML',css:'CSS',json:'JSON',md:'MD'})[e]||'TEXT'}
@@ -403,6 +418,39 @@ function jumpToErrorLine(){
 
   editor.scrollTop=(detectedErrorLine-1)*lineHeight;
 }
+  
+function analyzeCodeError(error,code){
+  const analysis=document.getElementById('errorAnalysis');
+  const suggestion=document.getElementById('errorSuggestion');
+
+  if(!analysis||!suggestion)return;
+
+  const message=error.message;
+
+  let cause='エラーの原因を特定できませんでした。コードを確認してください。';
+  let fix='エラー箇所の前後のコードを確認してください。';
+
+  if(message.includes('Unexpected token')){
+    cause='予期しない記号が見つかりました。括弧や記号の対応関係に問題がある可能性があります。';
+    fix='()、{}、[] の閉じ忘れや、余分な記号がないか確認してください。';
+  }
+  else if(message.includes('Unterminated string')){
+    cause='文字列が正しく閉じられていません。';
+    fix='文字列の開始と終了に対応する引用符（" または \') があるか確認してください。';
+  }
+  else if(message.includes('Unterminated comment')){
+    cause='コメントが正しく閉じられていません。';
+    fix='/* で始めたコメントに */ があるか確認してください。';
+  }
+  else if(message.includes('Identifier')){
+    cause='変数名や識別子の宣言に問題がある可能性があります。';
+    fix='変数名の重複や、宣言の書き方を確認してください。';
+  }
+
+  analysis.textContent='原因分析：'+cause;
+  suggestion.textContent='修正候補：'+fix;
+}
+
   function detectCodeErrors(){
   const editor=document.getElementById('codeEditor');
   const results=document.getElementById('errorResults');
@@ -446,6 +494,9 @@ function jumpToErrorLine(){
     status.textContent='検査完了';
     status.style.color='var(--green)';
     results.textContent='構文エラーは見つかりませんでした。';
+    document.getElementById('errorAnalysis').textContent='原因分析：構文エラーは見つかりませんでした。';
+document.getElementById('errorSuggestion').textContent='修正候補：必要ありません。';
+
     detectedErrorLine=null;
 updateLineNumbers();
 
@@ -465,6 +516,7 @@ updateLineNumbers();
       '\n列番号：'+column;
 
     results.style.whiteSpace='pre-wrap';
+    analyzeCodeError(error,code);
   }
 }
 function searchCode(){const q=document.getElementById('codeSearch')?.value||'',v=document.getElementById('codeEditor')?.value||'',out=document.getElementById('searchResults');if(!out)return;if(!q){out.textContent='検索語を入力すると、このファイル内を検索します。';return}const hits=v.split('\n').map((line,i)=>({line:i+1,text:line})).filter(x=>x.text.toLowerCase().includes(q.toLowerCase()));out.textContent=hits.length?hits.slice(0,30).map(x=>`L${x.line}: ${x.text.trim()}`).join('\n'):`「${q}」は見つかりませんでした。`;out.style.whiteSpace='pre-wrap'}
