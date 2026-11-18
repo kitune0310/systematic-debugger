@@ -199,7 +199,27 @@ function codePage(){ensureCodeFiles();if(!activeCodeId&&state.codeFiles.length)a
       oninput="updateLineNumbers()"
       onscroll="syncLineScroll()">${f?esc(f.content):''}</textarea>
   </div>
-</div></div><div class="code-bottom"><div class="code-panel"><h3>SEARCH RESULTS</h3><div id="searchResults" class="code-status">検索語を入力すると、このファイル内を検索します。</div></div><div class="code-panel"><h3>DIFF PREVIEW</h3><div id="diffInfo" class="code-status">保存前の変更差分をここに表示します。</div><button class="btn" style="margin-top:8px" onclick="previewCodeDiff()" ${f?'':'disabled'}>差分を更新</button></div></div></section></div>`}
+</div></div>
+<div class="code-panel section-gap">
+  <div class="card-title">
+    <h2>ERROR DETECTOR</h2>
+    <span class="tag">JAVASCRIPT</span>
+  </div>
+
+  <div class="code-toolbar">
+    <button class="btn primary" onclick="detectCodeErrors()">
+      エラーを検査
+    </button>
+    <span id="errorStatus" class="code-status">
+      未検査
+    </span>
+  </div>
+
+  <div id="errorResults" class="code-status" style="margin-top:12px">
+    コードを検査すると、エラー情報がここに表示されます。
+  </div>
+</div>
+<div class="code-bottom"><div class="code-panel"><h3>SEARCH RESULTS</h3><div id="searchResults" class="code-status">検索語を入力すると、このファイル内を検索します。</div></div><div class="code-panel"><h3>DIFF PREVIEW</h3><div id="diffInfo" class="code-status">保存前の変更差分をここに表示します。</div><button class="btn" style="margin-top:8px" onclick="previewCodeDiff()" ${f?'':'disabled'}>差分を更新</button></div></div></section></div>`}
 function lineNumberText(v=''){return Array.from({length:Math.max(1,String(v).split('\n').length)},(_,i)=>i+1).join('\n')}
 function languageLabel(n){const e=(n.split('.').pop()||'text').toLowerCase();return ({js:'JS',mjs:'JS',html:'HTML',htm:'HTML',css:'CSS',json:'JSON',md:'MD'})[e]||'TEXT'}
 function newCodeFile(){ensureCodeFiles();const name=prompt('ファイル名を入力してください（例：app.js）');if(!name)return;if(!/^[a-zA-Z0-9._-]+$/.test(name)){alert('ファイル名は英数字・ドット・ハイフン・アンダースコアで入力してください。');return}if(state.codeFiles.some(x=>x.name===name)){alert('同じ名前のファイルがあります。');return}const f={id:crypto.randomUUID(),name,content:'',original:'',updatedAt:new Date().toISOString()};state.codeFiles.push(f);activeCodeId=f.id;log(`コードファイル「${name}」を作成`);save();render()}
@@ -305,6 +325,55 @@ function syncLineScroll(){
   if(editor&&highlight){
     highlight.scrollTop=editor.scrollTop;
     highlight.scrollLeft=editor.scrollLeft;
+  }
+}
+
+function detectCodeErrors(){
+  const editor=document.getElementById('codeEditor');
+  const results=document.getElementById('errorResults');
+  const status=document.getElementById('errorStatus');
+
+  if(!editor||!results||!status)return;
+
+  const code=editor.value;
+  const file=state.codeFiles.find(x=>x.id===activeCodeId);
+
+  if(!file){
+    status.textContent='ファイル未選択';
+    results.textContent='先にファイルを作成してください。';
+    return;
+  }
+
+  if(!code.trim()){
+    status.textContent='検査対象なし';
+    results.textContent='コードが入力されていません。';
+    return;
+  }
+
+  if(!/\.(js|mjs)$/i.test(file.name)){
+    status.textContent='対象外';
+    results.textContent='現在はJavaScript（.js / .mjs）のみ検査できます。';
+    return;
+  }
+
+  try{
+    new Function(code);
+
+    status.textContent='検査完了';
+    status.style.color='var(--green)';
+    results.textContent='構文エラーは見つかりませんでした。';
+
+  }catch(error){
+    status.textContent='エラー検出';
+    status.style.color='var(--red)';
+
+    const match=error.stack?.match(/<anonymous>:(\d+):(\d+)/);
+    const line=match?Math.max(1,Number(match[1])-2):'特定できません';
+
+    results.textContent=
+      'エラー内容：'+error.message+
+      '\n推定行番号：'+line;
+    results.style.whiteSpace='pre-wrap';
   }
 }
 function searchCode(){const q=document.getElementById('codeSearch')?.value||'',v=document.getElementById('codeEditor')?.value||'',out=document.getElementById('searchResults');if(!out)return;if(!q){out.textContent='検索語を入力すると、このファイル内を検索します。';return}const hits=v.split('\n').map((line,i)=>({line:i+1,text:line})).filter(x=>x.text.toLowerCase().includes(q.toLowerCase()));out.textContent=hits.length?hits.slice(0,30).map(x=>`L${x.line}: ${x.text.trim()}`).join('\n'):`「${q}」は見つかりませんでした。`;out.style.whiteSpace='pre-wrap'}
