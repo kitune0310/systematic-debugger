@@ -133,7 +133,15 @@ main{min-width:0}.topbar{height:66px;border-bottom:1px solid var(--line);display
     </form>
   </div>
 </div>
-<script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-clike.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+
+<script>  
 const KEY='systematicDebugger.v1';
 const initial={projects:[],activities:[],issues:[],hypotheses:[],checks:[]};
 let state=loadState(),currentPage='dashboard',selectedProject=null;
@@ -155,6 +163,11 @@ function render(){
  if(currentPage==='history')v.innerHTML=historyPage();
  if(currentPage==='code')v.innerHTML=codePage();
  if(currentPage==='settings')v.innerHTML=settingsPage();
+
+ if(currentPage==='code'){
+   updateLineNumbers();
+   syncLineScroll();
+ }
 }
 function dashboard(){
  const active=state.projects.filter(p=>p.status==='進行中').length;
@@ -183,7 +196,7 @@ function codePage(){ensureCodeFiles();if(!activeCodeId&&state.codeFiles.length)a
     <pre aria-hidden="true"><code id="highlightedCode" class="language-javascript"></code></pre>
     <textarea id="codeEditor" class="code-input" spellcheck="false"
       placeholder="コードを貼り付けるか、ファイルをアップロードしてください。"
-      oninput="updateLineNumbers();updateHighlight()"
+      oninput="updateLineNumbers()"
       onscroll="syncLineScroll()">${f?esc(f.content):''}</textarea>
   </div>
 </div></div><div class="code-bottom"><div class="code-panel"><h3>SEARCH RESULTS</h3><div id="searchResults" class="code-status">検索語を入力すると、このファイル内を検索します。</div></div><div class="code-panel"><h3>DIFF PREVIEW</h3><div id="diffInfo" class="code-status">保存前の変更差分をここに表示します。</div><button class="btn" style="margin-top:8px" onclick="previewCodeDiff()" ${f?'':'disabled'}>差分を更新</button></div></div></section></div>`}
@@ -195,7 +208,7 @@ function uploadCodeFiles(files){if(!files?.length)return;ensureCodeFiles();const
 function saveCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f)return;f.content=document.getElementById('codeEditor').value;f.updatedAt=new Date().toISOString();log(`コードファイル「${f.name}」を保存`);save();render()}
 function downloadCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f)return;const text=document.getElementById('codeEditor').value;const a=document.createElement('a');const u=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));a.href=u;a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function deleteCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f||!confirm(`${f.name} を削除しますか？`))return;state.codeFiles=state.codeFiles.filter(x=>x.id!==activeCodeId);activeCodeId=state.codeFiles[0]?.id||null;log(`コードファイル「${f.name}」を削除`);save();render()}
-function function updateLineNumbers(){
+function updateLineNumbers(){
   const editor=document.getElementById('codeEditor');
   const numbers=document.getElementById('lineNumbers');
 
@@ -245,19 +258,7 @@ function syncLineScroll(){
     numbers.scrollTop=editor.scrollTop;
   }
 
-  if(editor&&highlight){
-    highlight.scrollTop=editor.scrollTop;
-    highlight.scrollLeft=editor.scrollLeft;
-  }
-}
-function syncLineScroll(){
-  const editor=document.getElementById('codeEditor');
-  const numbers=document.getElementById('lineNumbers');
-  const highlight=document.querySelector('.editor-content pre');
-
-  if(editor&&numbers){
-    numbers.scrollTop=editor.scrollTop;
-  }
+  
 
   if(editor&&highlight){
     highlight.scrollTop=editor.scrollTop;
@@ -290,12 +291,6 @@ document.getElementById('view').addEventListener('change',e=>{if(e.target.id==='
 render();
 </script>
   
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-clike.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
 
 </body>
 </html>
