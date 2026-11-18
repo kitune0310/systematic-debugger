@@ -95,6 +95,16 @@ main{min-width:0}.topbar{height:66px;border-bottom:1px solid var(--line);display
   background:rgba(90,150,230,.35);
 }
 
+.error-line{
+  background:rgba(228,119,119,.18);
+  border-left:3px solid var(--red);
+}
+
+.error-line-label{
+  color:var(--red);
+  font-weight:bold;
+}
+
 .code-bottom{display:grid;grid-template-columns:1fr 1fr;gap:10px}.code-panel{border:1px solid var(--line);border-radius:9px;padding:12px;background:#121b26;min-width:0}.code-panel h3{font-size:11px;margin:0 0 8px}.code-panel textarea{width:100%;min-height:95px;background:#0c141e;color:var(--text);border:1px solid var(--line);border-radius:7px;padding:8px;font:11px/1.5 ui-monospace,monospace}.code-toolbar{display:flex;gap:7px;flex-wrap:wrap;align-items:center}.code-toolbar input{max-width:220px;background:#0f1721;border:1px solid var(--line);border-radius:7px;color:var(--text);padding:8px}.code-status{font-size:10px;color:var(--muted)}
 @media(max-width:760px){.code-layout{grid-template-columns:1fr}.code-sidebar{order:2}.code-main{order:1}.code-bottom{grid-template-columns:1fr}.editor-area{grid-template-columns:32px minmax(0,1fr)}.code-input{font-size:11px}}
 @media(max-width:900px){.app{grid-template-columns:205px 1fr}.content{padding:22px}.stats{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}}
@@ -271,12 +281,25 @@ function saveCodeFile(){
 }
 function downloadCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f)return;const text=document.getElementById('codeEditor').value;const a=document.createElement('a');const u=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));a.href=u;a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function deleteCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f||!confirm(`${f.name} を削除しますか？`))return;state.codeFiles=state.codeFiles.filter(x=>x.id!==activeCodeId);activeCodeId=state.codeFiles[0]?.id||null;log(`コードファイル「${f.name}」を削除`);save();render()}
+let detectedErrorLine=null;
 function updateLineNumbers(){
   const editor=document.getElementById('codeEditor');
   const numbers=document.getElementById('lineNumbers');
 
   if(editor&&numbers){
-    numbers.textContent=lineNumberText(editor.value);
+    const totalLines=editor.value.split('\n').length;
+
+    let html='';
+
+    for(let i=1;i<=totalLines;i++){
+      if(i===detectedErrorLine){
+        html+='<div class="error-line-label">! '+i+'</div>';
+      }else{
+        html+='<div>'+i+'</div>';
+      }
+    }
+
+    numbers.innerHTML=html;
   }
 
   updateHighlight();
@@ -372,6 +395,8 @@ function detectCodeErrors(){
     status.textContent='検査完了';
     status.style.color='var(--green)';
     results.textContent='構文エラーは見つかりませんでした。';
+    detectedErrorLine=null;
+updateLineNumbers();
 
   }catch(error){
     status.textContent='エラー検出';
@@ -379,6 +404,9 @@ function detectCodeErrors(){
 
     const line=error.loc?error.loc.line:'特定できません';
     const column=error.loc?error.loc.column+1:'特定できません';
+    detectedErrorLine=error.loc?error.loc.line:null;
+    updateLineNumbers();
+
 
     results.textContent=
       'エラー内容：'+error.message+
