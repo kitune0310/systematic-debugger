@@ -205,7 +205,49 @@ function languageLabel(n){const e=(n.split('.').pop()||'text').toLowerCase();ret
 function newCodeFile(){ensureCodeFiles();const name=prompt('ファイル名を入力してください（例：app.js）');if(!name)return;if(!/^[a-zA-Z0-9._-]+$/.test(name)){alert('ファイル名は英数字・ドット・ハイフン・アンダースコアで入力してください。');return}if(state.codeFiles.some(x=>x.name===name)){alert('同じ名前のファイルがあります。');return}const f={id:crypto.randomUUID(),name,content:'',original:'',updatedAt:new Date().toISOString()};state.codeFiles.push(f);activeCodeId=f.id;log(`コードファイル「${name}」を作成`);save();render()}
 function selectCodeFile(id){activeCodeId=id;render()}
 function uploadCodeFiles(files){if(!files?.length)return;ensureCodeFiles();const allowed=/\.(html?|css|m?js|json|txt|md)$/i;let pending=files.length;Array.from(files).forEach(file=>{if(!allowed.test(file.name)){alert(`${file.name}: 対応していない拡張子です。`);if(!--pending)finish();return}const reader=new FileReader();reader.onload=()=>{const old=state.codeFiles.find(x=>x.name===file.name);if(old){if(!confirm(`${file.name} は既にあります。置き換えますか？`)){if(!--pending)finish();return}old.content=String(reader.result);old.original=String(reader.result);old.updatedAt=new Date().toISOString();activeCodeId=old.id}else{const f={id:crypto.randomUUID(),name:file.name,content:String(reader.result),original:String(reader.result),updatedAt:new Date().toISOString()};state.codeFiles.push(f);activeCodeId=f.id}if(!--pending)finish()};reader.onerror=()=>{alert(`${file.name}を読み込めませんでした。`);if(!--pending)finish()}});function finish(){log('コードファイルを取り込み');save();render()}}
-function saveCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f)return;f.content=document.getElementById('codeEditor').value;f.updatedAt=new Date().toISOString();log(`コードファイル「${f.name}」を保存`);save();render()}
+
+function saveCodeFile(){
+  const f=state.codeFiles.find(x=>x.id===activeCodeId);
+
+  if(!f){
+    alert('保存するファイルが選択されていません。');
+    return;
+  }
+
+  const editor=document.getElementById('codeEditor');
+
+  if(!editor){
+    alert('エディタが見つかりません。');
+    return;
+  }
+
+  const oldContent=f.content;
+
+  try{
+    f.content=editor.value;
+    f.updatedAt=new Date().toISOString();
+
+    state.activities.unshift({
+      message:`コードファイル「${f.name}」を保存`,
+      at:new Date().toISOString()
+    });
+
+    state.activities=state.activities.slice(0,30);
+
+    save();
+
+    alert('コードを保存しました。');
+    render();
+
+  }catch(error){
+    f.content=oldContent;
+
+    alert(
+      '保存に失敗しました。\n\n' +
+      '原因：' + error.message
+    );
+  }
+}
 function downloadCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f)return;const text=document.getElementById('codeEditor').value;const a=document.createElement('a');const u=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));a.href=u;a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function deleteCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f||!confirm(`${f.name} を削除しますか？`))return;state.codeFiles=state.codeFiles.filter(x=>x.id!==activeCodeId);activeCodeId=state.codeFiles[0]?.id||null;log(`コードファイル「${f.name}」を削除`);save();render()}
 function updateLineNumbers(){
