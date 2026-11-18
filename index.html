@@ -279,6 +279,10 @@ function codePage(){ensureCodeFiles();if(!activeCodeId&&state.codeFiles.length)a
     </button>
     <button class="btn" onclick="cancelFixPreview()">
       キャンセル
+    <button class="btn" onclick="undoAppliedFix()">
+  UNDO
+</button>
+
     </button>
   </div>
 </div>
@@ -336,6 +340,7 @@ function deleteCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);i
 let detectedErrorLine=null;
 let pendingFixCode=null;
 let originalFixCode=null;
+let undoFixCode=null;
 function updateLineNumbers(){
   const editor=document.getElementById('codeEditor');
   const numbers=document.getElementById('lineNumbers');
@@ -447,6 +452,25 @@ function jumpToErrorLine(){
 
   editor.scrollTop=(detectedErrorLine-1)*lineHeight;
 }
+  
+function undoAppliedFix(){
+  const editor=document.getElementById('codeEditor');
+  const status=document.getElementById('fixStatus');
+
+  if(!editor||undoFixCode===null){
+    status.textContent='取り消せる修正がありません。';
+    return;
+  }
+
+  editor.value=undoFixCode;
+  undoFixCode=null;
+
+  updateLineNumbers();
+  updateHighlight();
+
+  status.textContent='修正を取り消しました。保存ボタンで元のコードを保存できます。';
+}
+
 function applyFixPreview(){
   const editor=document.getElementById('codeEditor');
   const status=document.getElementById('fixStatus');
@@ -467,7 +491,7 @@ function applyFixPreview(){
     status.textContent='修正候補の再検査に失敗しました。';
     return;
   }
-
+  undoFixCode=editor.value;
   editor.value=pendingFixCode;
 
   pendingFixCode=null;
