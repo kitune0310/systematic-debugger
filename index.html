@@ -233,9 +233,12 @@ function codePage(){ensureCodeFiles();if(!activeCodeId&&state.codeFiles.length)a
     </span>
   </div>
 
-  <div id="errorResults" class="code-status" style="margin-top:12px">
-    コードを検査すると、エラー情報がここに表示されます。
-  </div>
+  <div id="errorResults"
+     class="code-status"
+     style="margin-top:12px;cursor:pointer"
+     onclick="jumpToErrorLine()">
+  コードを検査すると、エラー情報がここに表示されます。
+</div>
 </div>
 <div class="code-bottom"><div class="code-panel"><h3>SEARCH RESULTS</h3><div id="searchResults" class="code-status">検索語を入力すると、このファイル内を検索します。</div></div><div class="code-panel"><h3>DIFF PREVIEW</h3><div id="diffInfo" class="code-status">保存前の変更差分をここに表示します。</div><button class="btn" style="margin-top:8px" onclick="previewCodeDiff()" ${f?'':'disabled'}>差分を更新</button></div></div></section></div>`}
 function lineNumberText(v=''){return Array.from({length:Math.max(1,String(v).split('\n').length)},(_,i)=>i+1).join('\n')}
@@ -375,7 +378,32 @@ function syncLineScroll(){
   }
 }
 
-function detectCodeErrors(){
+function jumpToErrorLine(){
+  const editor=document.getElementById('codeEditor');
+
+  if(!editor||!detectedErrorLine)return;
+
+  const lines=editor.value.split('\n');
+
+  let position=0;
+
+  for(let i=0;i<detectedErrorLine-1;i++){
+    position+=lines[i].length+1;
+  }
+
+  editor.focus();
+  editor.setSelectionRange(
+    position,
+    position+lines[detectedErrorLine-1].length
+  );
+
+  const lineHeight=parseFloat(
+    getComputedStyle(editor).lineHeight
+  );
+
+  editor.scrollTop=(detectedErrorLine-1)*lineHeight;
+}
+  function detectCodeErrors(){
   const editor=document.getElementById('codeEditor');
   const results=document.getElementById('errorResults');
   const status=document.getElementById('errorStatus');
