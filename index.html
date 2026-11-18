@@ -255,6 +255,33 @@ function codePage(){ensureCodeFiles();if(!activeCodeId&&state.codeFiles.length)a
     修正候補：まだありません。
   </div>
 </div>
+<div class="code-panel section-gap">
+  <div class="card-title">
+    <h2>FIX PREVIEW</h2>
+    <span class="tag">REVIEW BEFORE APPLY</span>
+  </div>
+
+  <div class="code-status" id="fixStatus">
+    修正候補はまだありません。
+  </div>
+
+  <div class="diff-container" style="margin-top:12px">
+    <h3>修正前</h3>
+    <pre id="fixBefore" class="code-status">---</pre>
+
+    <h3>修正後</h3>
+    <pre id="fixAfter" class="code-status">---</pre>
+  </div>
+
+  <div class="code-toolbar" style="margin-top:12px">
+    <button class="btn primary" onclick="applyFixPreview()" id="applyFixButton" disabled>
+      修正を適用
+    </button>
+    <button class="btn" onclick="cancelFixPreview()">
+      キャンセル
+    </button>
+  </div>
+</div>
 <div class="code-bottom"><div class="code-panel"><h3>SEARCH RESULTS</h3><div id="searchResults" class="code-status">検索語を入力すると、このファイル内を検索します。</div></div><div class="code-panel"><h3>DIFF PREVIEW</h3><div id="diffInfo" class="code-status">保存前の変更差分をここに表示します。</div><button class="btn" style="margin-top:8px" onclick="previewCodeDiff()" ${f?'':'disabled'}>差分を更新</button></div></div></section></div>`}
 function lineNumberText(v=''){return Array.from({length:Math.max(1,String(v).split('\n').length)},(_,i)=>i+1).join('\n')}
 function languageLabel(n){const e=(n.split('.').pop()||'text').toLowerCase();return ({js:'JS',mjs:'JS',html:'HTML',htm:'HTML',css:'CSS',json:'JSON',md:'MD'})[e]||'TEXT'}
@@ -307,6 +334,8 @@ function saveCodeFile(){
 function downloadCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f)return;const text=document.getElementById('codeEditor').value;const a=document.createElement('a');const u=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));a.href=u;a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function deleteCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f||!confirm(`${f.name} を削除しますか？`))return;state.codeFiles=state.codeFiles.filter(x=>x.id!==activeCodeId);activeCodeId=state.codeFiles[0]?.id||null;log(`コードファイル「${f.name}」を削除`);save();render()}
 let detectedErrorLine=null;
+let pendingFixCode=null;
+let originalFixCode=null;
 function updateLineNumbers(){
   const editor=document.getElementById('codeEditor');
   const numbers=document.getElementById('lineNumbers');
@@ -418,7 +447,102 @@ function jumpToErrorLine(){
 
   editor.scrollTop=(detectedErrorLine-1)*lineHeight;
 }
-  
+function applyFixPreview(){
+  const editor=document.getElementById('codeEditor');
+  const status=document.getElementById('fixStatus');
+
+  if(!editor||pendingFixCode===null)return;
+
+  if(editor.value!==originalFixCode){
+    status.textContent='元のコードが変更されています。再検査してください。';
+    return;
+  }
+
+  try{
+    acorn.parse(pendingFixCode,{
+      ecmaVersion:'latest',
+      sourceType:'script'
+    });
+  }catch(error){
+    status.textContent='修正候補の再検査に失敗しました。';
+    return;
+  }
+
+  editor.value=pendingFixCode;
+
+  pendingFixCode=null;
+  originalFixCode=null;
+
+  updateLineNumbers();
+  updateHighlight();
+
+  document.getElementById('fixBefore').textContent='---';
+  document.getElementById('fixAfter').textContent='---';
+  document.getElementById('applyFixButton').disabled=true;
+
+  status.textContent='修正を適用しました。保存ボタンでファイルに保存してください。';
+}
+
+function cancelFixPreview(){
+  pendingFixCode=null;
+  originalFixCode=null;
+
+  document.getElementById('fixBefore').textContent='---';
+  document.getElementById('fixAfter').textContent='---';
+  document.getElementById('fixStatus').textContent='修正候補をキャンセルしました。';
+  document.getElementById('applyFixButton').disabled=true;
+}
+function createFixPreview(error,code){
+  const before=document.getElementById('fixBefore');
+  const after=document.getElementById('fixAfter');
+  const status=document.getElementById('fixStatus');
+  const button=document.getElementById('applyFixButton');
+
+  pendingFixCode=null;
+  originalFixCode=null;
+
+  before.textContent=code;
+  after.textContent='修正候補はありません。';
+  button.disabled=true;
+
+  if(!error.loc||!error.message.includes('Unexpected token')){
+    status.textContent='安全に修正できる候補がありません。';
+    return;
+  }
+
+  const lines=code.split('\n');
+  const index=error.loc.line-1;
+  const line=lines[index];
+
+  const match=line.match(/^(\s*console\.log\([^;\n]*)(;)(\s*)$/);
+
+  if(!match)return;
+
+  const openCount=(match[1].match(/\(/g)||[]).length;
+  const closeCount=(match[1].match(/\)/g)||[]).length;
+
+  if(openCount-closeCount!==1)return;
+
+  lines[index]=match[1]+')'+match[2]+match[3];
+
+  const fixedCode=lines.join('\n');
+
+  try{
+    acorn.parse(fixedCode,{
+      ecmaVersion:'latest',
+      sourceType:'script'
+    });
+  }catch(error){
+    return;
+  }
+
+  originalFixCode=code;
+  pendingFixCode=fixedCode;
+
+  after.textContent=fixedCode;
+  status.textContent='修正候補を生成しました。内容を確認してください。';
+  button.disabled=false;
+}
 function analyzeCodeError(error,code){
   const analysis=document.getElementById('errorAnalysis');
   const suggestion=document.getElementById('errorSuggestion');
@@ -517,6 +641,8 @@ updateLineNumbers();
 
     results.style.whiteSpace='pre-wrap';
     analyzeCodeError(error,code);
+    createFixPreview(error,code);
+
   }
 }
 function searchCode(){const q=document.getElementById('codeSearch')?.value||'',v=document.getElementById('codeEditor')?.value||'',out=document.getElementById('searchResults');if(!out)return;if(!q){out.textContent='検索語を入力すると、このファイル内を検索します。';return}const hits=v.split('\n').map((line,i)=>({line:i+1,text:line})).filter(x=>x.text.toLowerCase().includes(q.toLowerCase()));out.textContent=hits.length?hits.slice(0,30).map(x=>`L${x.line}: ${x.text.trim()}`).join('\n'):`「${q}」は見つかりませんでした。`;out.style.whiteSpace='pre-wrap'}
