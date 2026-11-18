@@ -140,6 +140,7 @@ main{min-width:0}.topbar{height:66px;border-bottom:1px solid var(--line);display
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/acorn/8.15.0/acorn.min.js"></script>
 
 <script>  
 const KEY='systematicDebugger.v1';
@@ -356,8 +357,17 @@ function detectCodeErrors(){
     return;
   }
 
+  if(!window.acorn){
+    status.textContent='検査できません';
+    results.textContent='Acornの読み込みに失敗しました。ページを再読み込みしてください。';
+    return;
+  }
+
   try{
-    new Function(code);
+    acorn.parse(code,{
+      ecmaVersion:'latest',
+      sourceType:'script'
+    });
 
     status.textContent='検査完了';
     status.style.color='var(--green)';
@@ -367,12 +377,14 @@ function detectCodeErrors(){
     status.textContent='エラー検出';
     status.style.color='var(--red)';
 
-    const match=error.stack?.match(/<anonymous>:(\d+):(\d+)/);
-    const line=match?Math.max(1,Number(match[1])-2):'特定できません';
+    const line=error.loc?error.loc.line:'特定できません';
+    const column=error.loc?error.loc.column+1:'特定できません';
 
     results.textContent=
       'エラー内容：'+error.message+
-      '\n推定行番号：'+line;
+      '\n行番号：'+line+
+      '\n列番号：'+column;
+
     results.style.whiteSpace='pre-wrap';
   }
 }
