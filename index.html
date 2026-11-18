@@ -99,6 +99,13 @@ main{min-width:0}.topbar{height:66px;border-bottom:1px solid var(--line);display
   background:rgba(228,119,119,.18);
   border-left:3px solid var(--red);
 }
+  
+.error-code-highlight{
+  background:rgba(228,119,119,.20);
+  display:block;
+  width:100%;
+}
+
 
 .error-line-label{
   color:var(--red);
@@ -327,14 +334,30 @@ function updateHighlight(){
   const language=languages[ext]||'javascript';
   const grammar=Prism.languages[language];
 
+  const code=editor.value;
+  const lines=code.split('\n');
+
   output.className='language-'+language;
-  output.innerHTML=grammar
-    ? Prism.highlight(editor.value,grammar,language)
-    : Prism.util.encode(editor.value);
+
+  const highlighted=grammar
+    ? Prism.highlight(code,grammar,language)
+    : Prism.util.encode(code);
+
+  const highlightedLines=highlighted.split('\n');
+
+  output.innerHTML=highlightedLines.map((line,index)=>{
+    const lineNumber=index+1;
+
+    if(lineNumber===detectedErrorLine){
+      return '<span class="error-code-highlight">'+
+        (line||' ')+'</span>';
+    }
+
+    return '<span>'+ (line||' ')+'</span>';
+  }).join('\n');
 
   output.parentElement.className='language-'+language;
 }
-
 function syncLineScroll(){
   const editor=document.getElementById('codeEditor');
   const numbers=document.getElementById('lineNumbers');
