@@ -670,6 +670,12 @@ function jumpToStackFrame(fileName,lineNumber){
     position,
     position+lines[lineNumber-1].length
   );
+  editor.style.transition='background-color 0.2s';
+editor.style.backgroundColor='rgba(214,173,85,0.12)';
+
+setTimeout(()=>{
+  editor.style.backgroundColor='';
+},1200);
 
   const lineHeight=parseFloat(getComputedStyle(editor).lineHeight)||20;
   editor.scrollTop=(lineNumber-1)*lineHeight;
