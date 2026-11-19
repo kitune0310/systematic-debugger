@@ -540,7 +540,15 @@ function analyzeStackTrace(){
 
   if(!input||!status||!results)return;
 
-  const trace=input.value.trim();
+  let trace=input.value.trim();
+
+try{
+  if(/%[0-9A-Fa-f]{2}/.test(trace)){
+    trace=decodeURIComponent(trace);
+  }
+}catch(error){
+  console.warn('URLデコードをスキップしました。',error);
+}
 
   if(!trace){
     status.textContent='スタックトレースを入力してください。';
