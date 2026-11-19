@@ -618,6 +618,8 @@ function renderDiffAnalyzer(beforeCode,afterCode){
 
   const left=[];
   const right=[];
+  let addedCount=0;
+let removedCount=0;
 
   let i=0;
   let j=0;
@@ -639,10 +641,12 @@ function renderDiffAnalyzer(beforeCode,afterCode){
         dp[i+1][j]>=dp[i][j+1]
       )
     ){
+      removedCount++;
       left.push('- '+oldLines[i]);
       right.push('');
       i++;
     }else{
+      addedCount++;
       left.push('');
       right.push('+ '+newLines[j]);
       j++;
@@ -670,7 +674,12 @@ function renderDiffAnalyzer(beforeCode,afterCode){
     return '<span class="diff-same">'+escapeHTML(line||' ')+'</span>';
   }).join('\n');
 
-  status.textContent='コードの比較が完了しました。変更行を確認してください。';
+  const totalChanges=addedCount+removedCount;
+
+status.textContent=
+  '比較完了 | 追加: '+addedCount+
+  '行 | 削除: '+removedCount+
+  '行 | 変更合計: '+totalChanges+'行';
 }
 function createFixPreview(error,code){
   const before=document.getElementById('fixBefore');
