@@ -330,7 +330,10 @@ function codePage(){ensureCodeFiles();if(!activeCodeId&&state.codeFiles.length)a
 
   <div class="card-title">
     <h2>DIFF ANALYZER 2.0</h2>
-    <span class="tag">CODE COMPARISON</span>
+    <div style="display:flex;align-items:center;gap:8px">
+  <span class="tag">CODE COMPARISON</span>
+  <button class="btn" id="diffViewToggle" onclick="toggleDiffView()">変更箇所のみ表示</button>
+</div>
   </div>
 
   <div class="code-status" id="diffStatus">
@@ -406,6 +409,8 @@ let originalFixCode=null;
 let undoFixCode=null;
 let lastDiffBefore=null;
 let lastDiffAfter=null;
+let diffOnlyChanges=false;
+let diffRows=[];
 function updateLineNumbers(){
   const editor=document.getElementById('codeEditor');
   const numbers=document.getElementById('lineNumbers');
@@ -581,7 +586,53 @@ function cancelFixPreview(){
   document.getElementById('fixStatus').textContent='修正候補をキャンセルしました。';
   document.getElementById('applyFixButton').disabled=true;
 }
-function renderDiffAnalyzer(beforeCode,afterCode){
+function displayDiffRows(){
+  const before=document.getElementById('diffBefore');
+  const after=document.getElementById('diffAfter');
+  const toggle=document.getElementById('diffViewToggle');
+
+  if(!before||!after)return;
+
+  const rowsToShow=diffOnlyChanges
+    ?diffRows.filter(row=>row.type!=='same')
+    :diffRows;
+
+  const escapeHTML=value=>String(value)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+
+  before.innerHTML=rowsToShow.map(row=>{
+    const className=row.type==='removed'
+      ?'diff-removed'
+      :'diff-same';
+
+    return '<span class="'+className+'">'+
+      escapeHTML(row.left||' ')+'</span>';
+  }).join('\n');
+
+  after.innerHTML=rowsToShow.map(row=>{
+    const className=row.type==='added'
+      ?'diff-added'
+      :'diff-same';
+
+    return '<span class="'+className+'">'+
+      escapeHTML(row.right||' ')+'</span>';
+  }).join('\n');
+
+  if(toggle){
+    toggle.textContent=diffOnlyChanges
+      ?'すべて表示'
+      :'変更箇所のみ表示';
+  }
+}
+  function toggleDiffView(){
+  diffOnlyChanges=!diffOnlyChanges;
+  displayDiffRows();
+}
+  function renderDiffAnalyzer(beforeCode,afterCode){
   const status=document.getElementById('diffStatus');
   const before=document.getElementById('diffBefore');
   const after=document.getElementById('diffAfter');
@@ -617,10 +668,10 @@ function renderDiffAnalyzer(beforeCode,afterCode){
   }
 
   const left=[];
-  const right=[];
-  let addedCount=0;
+const right=[];
+diffRows=[];
+let addedCount=0;
 let removedCount=0;
-
   let i=0;
   let j=0;
 
@@ -631,9 +682,16 @@ let removedCount=0;
       oldLines[i]===newLines[j]
     ){
       left.push(oldLines[i]);
-      right.push(newLines[j]);
-      i++;
-      j++;
+right.push(newLines[j]);
+
+diffRows.push({
+  type:'same',
+  left:oldLines[i],
+  right:newLines[j]
+});
+
+i++;
+j++;
     }else if(
       i<oldLines.length&&
       (
@@ -642,14 +700,28 @@ let removedCount=0;
       )
     ){
       removedCount++;
-      left.push('- '+oldLines[i]);
-      right.push('');
-      i++;
+left.push('- '+oldLines[i]);
+right.push('');
+
+diffRows.push({
+  type:'removed',
+  left:'- '+oldLines[i],
+  right:''
+});
+
+i++;
     }else{
       addedCount++;
-      left.push('');
-      right.push('+ '+newLines[j]);
-      j++;
+left.push('');
+right.push('+ '+newLines[j]);
+
+diffRows.push({
+  type:'added',
+  left:'',
+  right:'+ '+newLines[j]
+});
+
+j++;
     }
   }
 
@@ -674,13 +746,16 @@ let removedCount=0;
     return '<span class="diff-same">'+escapeHTML(line||' ')+'</span>';
   }).join('\n');
 
-  const totalChanges=addedCount+removedCount;
+  diffOnlyChanges=false;
+displayDiffRows();
+
+const totalChanges=addedCount+removedCount;
 
 status.textContent=
   '比較完了 | 追加: '+addedCount+
   '行 | 削除: '+removedCount+
   '行 | 変更合計: '+totalChanges+'行';
-}
+  }
 function createFixPreview(error,code){
   const before=document.getElementById('fixBefore');
   const after=document.getElementById('fixAfter');
