@@ -589,16 +589,23 @@ try{
   status.textContent=`解析完了 | ${frames.length} 件のフレームを検出`;
 
   results.innerHTML=frames.map((frame,index)=>`
-    <div class="code-status" style="margin-bottom:8px">
-      <strong>#${index+1} ${esc(frame.functionName)}</strong>
-      <div style="margin-top:6px">
-        ファイル：${esc(frame.fileName)}
-      </div>
-      <div>
-        行：${frame.line} / 列：${frame.column}
-      </div>
+  <div
+    class="code-status"
+    style="margin-bottom:8px;cursor:pointer"
+    onclick="jumpToStackFrame('${esc(frame.fileName)}',${frame.line})"
+  >
+    <strong>#${index+1} ${esc(frame.functionName)}</strong>
+    <div style="margin-top:6px">
+      ファイル：${esc(frame.fileName)}
     </div>
-  `).join('');
+    <div>
+      行：${frame.line} / 列：${frame.column}
+    </div>
+    <div style="margin-top:6px;color:#d6ad55">
+      該当行へ移動 →
+    </div>
+  </div>
+`).join('');
 }
 
 function clearStackTrace(){
@@ -618,6 +625,57 @@ function clearStackTrace(){
         スタックトレースを入力して解析してください。
       </div>
     `;
+  }
+}
+function jumpToStackFrame(fileName,lineNumber){
+  const editor=document.getElementById('codeEditor');
+  const status=document.getElementById('stackTraceStatus');
+
+  if(!editor)return;
+
+  const selectedFile=state.codeFiles.find(
+    file=>file.id===activeCodeId
+  );
+
+  if(!selectedFile){
+    if(status)status.textContent='先にCode Viewerでファイルを開いてください。';
+    return;
+  }
+
+  const targetName=fileName.split(/[\\/]/).pop();
+  const currentName=selectedFile.name.split(/[\\/]/).pop();
+
+  if(targetName!==currentName){
+    if(status){
+      status.textContent=`ファイルが一致しません：${targetName} / 現在のファイル：${currentName}`;
+    }
+    return;
+  }
+
+  const lines=editor.value.split('\n');
+
+  if(lineNumber<1||lineNumber>lines.length){
+    if(status)status.textContent='指定された行番号が現在のファイル範囲外です。';
+    return;
+  }
+
+  let position=0;
+
+  for(let i=0;i<lineNumber-1;i++){
+    position+=lines[i].length+1;
+  }
+
+  editor.focus();
+  editor.setSelectionRange(
+    position,
+    position+lines[lineNumber-1].length
+  );
+
+  const lineHeight=parseFloat(getComputedStyle(editor).lineHeight)||20;
+  editor.scrollTop=(lineNumber-1)*lineHeight;
+
+  if(status){
+    status.textContent=`${currentName} の ${lineNumber} 行目へ移動しました。`;
   }
 }
 function jumpToErrorLine(){
