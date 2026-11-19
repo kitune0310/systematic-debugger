@@ -280,6 +280,43 @@ function codePage(){ensureCodeFiles();if(!activeCodeId&&state.codeFiles.length)a
 </div>
 <div class="code-panel section-gap">
   <div class="card-title">
+    <h2>STACK TRACE ANALYZER</h2>
+    <span class="tag">CALL STACK</span>
+  </div>
+
+  <div class="field">
+    <label for="stackTraceInput">スタックトレース・エラーログ</label>
+    <textarea
+      id="stackTraceInput"
+      placeholder="例：
+TypeError: Cannot read properties of undefined
+    at testFunction (app.js:15:8)
+    at main (app.js:25:3)"
+      style="min-height:150px"
+    ></textarea>
+  </div>
+
+  <div class="code-toolbar" style="margin-top:10px">
+    <button class="btn primary" onclick="analyzeStackTrace()">
+      スタックトレースを解析
+    </button>
+    <button class="btn" onclick="clearStackTrace()">
+      クリア
+    </button>
+  </div>
+
+  <div id="stackTraceStatus" class="code-status" style="margin-top:12px">
+    解析待ち
+  </div>
+
+  <div id="stackTraceResults" style="margin-top:12px">
+    <div class="empty">
+      スタックトレースを入力して解析してください。
+    </div>
+  </div>
+</div>
+<div class="code-panel section-gap">
+  <div class="card-title">
     <h2>ERROR ANALYSIS</h2>
     <span class="tag">ROOT CAUSE</span>
   </div>
@@ -496,7 +533,85 @@ function syncLineScroll(){
     highlight.scrollLeft=editor.scrollLeft;
   }
 }
+function analyzeStackTrace(){
+  const input=document.getElementById('stackTraceInput');
+  const status=document.getElementById('stackTraceStatus');
+  const results=document.getElementById('stackTraceResults');
 
+  if(!input||!status||!results)return;
+
+  const trace=input.value.trim();
+
+  if(!trace){
+    status.textContent='スタックトレースを入力してください。';
+    results.innerHTML='<div class="empty">解析する内容がありません。</div>';
+    return;
+  }
+
+  const lines=trace.split(/\r?\n/);
+  const frames=[];
+
+  lines.forEach(raw=>{
+    const line=raw.trim();
+
+    const match=line.match(
+      /^(?:at\s+)?(?:(.*?)\s+\()?(.+?):(\d+):(\d+)\)?$/
+    );
+
+    if(!match)return;
+
+    let functionName=match[1]||'(anonymous)';
+    let fileName=match[2].trim();
+
+    frames.push({
+      functionName,
+      fileName,
+      line:Number(match[3]),
+      column:Number(match[4]),
+      raw
+    });
+  });
+
+  if(frames.length===0){
+    status.textContent='解析できるスタックフレームが見つかりませんでした。';
+    results.innerHTML='<div class="empty">対応する形式の行がありません。</div>';
+    return;
+  }
+
+  status.textContent=`解析完了 | ${frames.length} 件のフレームを検出`;
+
+  results.innerHTML=frames.map((frame,index)=>`
+    <div class="code-status" style="margin-bottom:8px">
+      <strong>#${index+1} ${esc(frame.functionName)}</strong>
+      <div style="margin-top:6px">
+        ファイル：${esc(frame.fileName)}
+      </div>
+      <div>
+        行：${frame.line} / 列：${frame.column}
+      </div>
+    </div>
+  `).join('');
+}
+
+function clearStackTrace(){
+  const input=document.getElementById('stackTraceInput');
+  const status=document.getElementById('stackTraceStatus');
+  const results=document.getElementById('stackTraceResults');
+
+  if(input)input.value='';
+
+  if(status){
+    status.textContent='解析待ち';
+  }
+
+  if(results){
+    results.innerHTML=`
+      <div class="empty">
+        スタックトレースを入力して解析してください。
+      </div>
+    `;
+  }
+}
 function jumpToErrorLine(){
   const editor=document.getElementById('codeEditor');
 
