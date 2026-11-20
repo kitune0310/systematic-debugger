@@ -105,7 +105,12 @@ main{min-width:0}.topbar{height:66px;border-bottom:1px solid var(--line);display
   display:block;
   width:100%;
 }
-
+.stack-code-highlight{
+  background:rgba(214,173,85,.28);
+  border-left:3px solid #d6ad55;
+  display:block;
+  width:100%;
+}
 
 .error-line-label{
   color:var(--red);
@@ -441,6 +446,7 @@ function saveCodeFile(){
 function downloadCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f)return;const text=document.getElementById('codeEditor').value;const a=document.createElement('a');const u=URL.createObjectURL(new Blob([text],{type:'text/plain;charset=utf-8'}));a.href=u;a.download=f.name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
 function deleteCodeFile(){const f=state.codeFiles.find(x=>x.id===activeCodeId);if(!f||!confirm(`${f.name} を削除しますか？`))return;state.codeFiles=state.codeFiles.filter(x=>x.id!==activeCodeId);activeCodeId=state.codeFiles[0]?.id||null;log(`コードファイル「${f.name}」を削除`);save();render()}
 let detectedErrorLine=null;
+let stackTraceTargetLine=null;
 let pendingFixCode=null;
 let originalFixCode=null;
 let undoFixCode=null;
@@ -508,6 +514,10 @@ function updateHighlight(){
     const lineNumber=index+1;
 
     if(lineNumber===detectedErrorLine){
+      if(lineNumber===stackTraceTargetLine){
+  return '<span class="stack-code-highlight">'+
+    (line||' ')+'</span>';
+}
       return '<span class="error-code-highlight">'+
         (line||' ')+'</span>';
     }
