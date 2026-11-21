@@ -214,16 +214,7 @@ function dateLabel(v){return new Date(v).toLocaleDateString('ja-JP',{year:'numer
 function log(message){state.activities.unshift({message,at:new Date().toISOString()});state.activities=state.activities.slice(0,30);save()}
 function projectCard(p){return `<div class="project"><div class="project-main"><div class="project-name">${esc(p.name)}</div><div class="project-meta">${esc(p.description||'説明なし')} · 更新 ${dateLabel(p.updatedAt)}</div></div><div style="display:flex;gap:8px;align-items:center"><span class="tag ${p.status==='進行中'?'active':''}">${esc(p.status)}</span><button class="btn" onclick="openProject('${p.id}')">開く</button></div></div>`}
 function pageHead(kicker,title,sub,action=''){return `<div class="page-head"><div><div class="eyebrow">${kicker}</div><h1>${title}</h1><p class="sub">${sub}</p></div>${action}</div>`}
-function render(){
- const v=document.getElementById('view');document.getElementById('crumb').textContent=({dashboard:'Dashboard',projects:'Projects',investigation:'Investigation',hypotheses:'Hypotheses',verification:'Verification',history:'History',code:'Code Viewer',settings:'Settings'})[currentPage]||'Project';
- document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));
- if(currentPage==='dashboard')v.innerHTML=dashboard();
- if(currentPage==='projects')v.innerHTML=projectsPage();
- if(currentPage==='investigation')v.innerHTML=investigationPage();
- if(currentPage==='hypotheses')v.innerHTML=hypothesesPage();
- if(currentPage==='verification')v.innerHTML=verificationPage();
- if(currentPage==='history')v.innerHTML=historyPage();
- function analyzeDependencies(){
+function analyzeDependencies(){
   ensureCodeFiles();
 
   const graph=document.getElementById('dependencyGraph');
@@ -312,6 +303,16 @@ function render(){
     </div>
   `;
 }
+ function render(){
+ const v=document.getElementById('view');document.getElementById('crumb').textContent=({dashboard:'Dashboard',projects:'Projects',investigation:'Investigation',hypotheses:'Hypotheses',verification:'Verification',history:'History',code:'Code Viewer',settings:'Settings'})[currentPage]||'Project';
+ document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));
+ if(currentPage==='dashboard')v.innerHTML=dashboard();
+ if(currentPage==='projects')v.innerHTML=projectsPage();
+ if(currentPage==='investigation')v.innerHTML=investigationPage();
+ if(currentPage==='hypotheses')v.innerHTML=hypothesesPage();
+ if(currentPage==='verification')v.innerHTML=verificationPage();
+ if(currentPage==='history')v.innerHTML=historyPage();
+ 
  function dependencyPage(){
   ensureCodeFiles();
 
