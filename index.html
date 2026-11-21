@@ -223,6 +223,95 @@ function render(){
  if(currentPage==='hypotheses')v.innerHTML=hypothesesPage();
  if(currentPage==='verification')v.innerHTML=verificationPage();
  if(currentPage==='history')v.innerHTML=historyPage();
+ function analyzeDependencies(){
+  ensureCodeFiles();
+
+  const graph=document.getElementById('dependencyGraph');
+  const count=document.getElementById('dependencyCount');
+
+  if(!graph||!count)return;
+
+  const files=state.codeFiles;
+  const edges=[];
+
+  const patterns=[
+    /import\s+(?:[\s\S]*?\s+from\s+)?['"]([^'"]+)['"]/g,
+    /import\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
+    /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g
+  ];
+
+  files.forEach(file=>{
+    if(!/\.(js|mjs|cjs)$/i.test(file.name))return;
+
+    patterns.forEach(pattern=>{
+      pattern.lastIndex=0;
+
+      let match;
+
+      while((match=pattern.exec(file.content))!==null){
+        const path=match[1];
+
+        if(!path.startsWith('./')&&!path.startsWith('../')){
+          continue;
+        }
+
+        const targetName=path.split('/').pop();
+
+        const target=files.find(other=>{
+          return other.name===targetName||
+            other.name===targetName+'.js'||
+            other.name===targetName+'.mjs'||
+            other.name===targetName+'/index.js';
+        });
+
+        if(target&&target.id!==file.id){
+          edges.push({
+            from:file.name,
+            to:target.name
+          });
+        }
+      }
+    });
+  });
+
+  const uniqueEdges=[
+    ...new Map(
+      edges.map(edge=>[
+        edge.from+'->'+edge.to,
+        edge
+      ])
+    ).values()
+  ];
+
+  count.textContent=uniqueEdges.length;
+
+  if(uniqueEdges.length===0){
+    graph.innerHTML=`
+      <div class="empty">
+        依存関係は見つかりませんでした。
+        <br>
+        JavaScriptファイルの相対パス import / require を確認してください。
+      </div>
+    `;
+    return;
+  }
+
+  graph.innerHTML=`
+    <div class="project-list">
+      ${uniqueEdges.map(edge=>`
+        <div class="project">
+          <div class="project-main">
+            <div class="project-name">${esc(edge.from)}</div>
+            <div class="project-meta">
+              依存先：${esc(edge.to)}
+            </div>
+          </div>
+          <span class="tag">DEPENDENCY</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
  function dependencyPage(){
   ensureCodeFiles();
 
@@ -252,10 +341,15 @@ function render(){
 
         <div class="card">
           <div class="stat-label">DEPENDENCIES</div>
-          <div class="stat-value">0</div>
+          <div class="stat-value" id="dependencyCount">0</div>
         </div>
       </div>
 
+      <div class="toolbar">
+  <button class="btn primary" onclick="analyzeDependencies()">
+    依存関係を解析
+  </button>
+</div>
       <div id="dependencyGraph"
            class="empty"
            style="min-height:300px">
