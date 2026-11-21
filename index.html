@@ -511,19 +511,20 @@ function updateHighlight(){
   const highlightedLines=highlighted.split('\n');
 
   output.innerHTML=highlightedLines.map((line,index)=>{
-    const lineNumber=index+1;
+  const lineNumber=index+1;
 
-    if(lineNumber===detectedErrorLine){
-      if(lineNumber===stackTraceTargetLine){
-  return '<span class="stack-code-highlight">'+
-    (line||' ')+'</span>';
-}
-      return '<span class="error-code-highlight">'+
-        (line||' ')+'</span>';
-    }
+  if(lineNumber===stackTraceTargetLine){
+    return '<span class="stack-code-highlight">'+
+      (line||' ')+'</span>';
+  }
 
-    return '<span>'+ (line||' ')+'</span>';
-  }).join('\n');
+  if(lineNumber===detectedErrorLine){
+    return '<span class="error-code-highlight">'+
+      (line||' ')+'</span>';
+  }
+
+  return '<span>'+ (line||' ')+'</span>';
+}).join('\n');
 
   output.parentElement.className='language-'+language;
 }
@@ -680,6 +681,9 @@ function jumpToStackFrame(fileName,lineNumber){
     position,
     position+lines[lineNumber-1].length
   );
+  stackTraceTargetLine=lineNumber;
+updateHighlight();
+  
   editor.style.transition='background-color 0.2s';
 editor.style.backgroundColor='rgba(214,173,85,0.12)';
 
