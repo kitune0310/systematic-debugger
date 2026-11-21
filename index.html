@@ -173,6 +173,7 @@ main{min-width:0}.topbar{height:66px;border-bottom:1px solid var(--line);display
     <button data-page="verification"><span class="ico">✓</span>Verification</button>
     <button data-page="history"><span class="ico">◷</span>History</button>
     <button data-page="code"><span class="ico">⌘</span>Code Viewer</button>
+    <button data-page="dependency"><span class="ico">⌘</span>Dependency Graph</button>
   </nav></div>
   <div><div class="nav-label">SYSTEM</div><nav class="nav"><button data-page="settings"><span class="ico">⚙</span>Settings</button></nav></div>
   <div class="side-bottom"><small>STORAGE STATUS</small><div class="sync-line"><span class="dot"></span> Local storage active</div><div class="sync-line"><span class="dot pending"></span> Cloud sync not configured</div></div>
@@ -222,7 +223,49 @@ function render(){
  if(currentPage==='hypotheses')v.innerHTML=hypothesesPage();
  if(currentPage==='verification')v.innerHTML=verificationPage();
  if(currentPage==='history')v.innerHTML=historyPage();
+ function dependencyPage(){
+  ensureCodeFiles();
+
+  return `
+    ${pageHead(
+      'DEVELOPMENT / CODE ANALYSIS',
+      'Dependency Graph',
+      'ファイル同士の依存関係を可視化します。'
+    )}
+
+    <div class="notice">
+      登録されたコードファイルを解析し、
+      ファイル間の依存関係をグラフで表示します。
+    </div>
+
+    <section class="card">
+      <div class="card-title">
+        <h2>DEPENDENCY OVERVIEW</h2>
+        <span class="tag">FILE RELATIONSHIPS</span>
+      </div>
+
+      <div class="grid stats">
+        <div class="card">
+          <div class="stat-label">TOTAL FILES</div>
+          <div class="stat-value">${state.codeFiles.length}</div>
+        </div>
+
+        <div class="card">
+          <div class="stat-label">DEPENDENCIES</div>
+          <div class="stat-value">0</div>
+        </div>
+      </div>
+
+      <div id="dependencyGraph"
+           class="empty"
+           style="min-height:300px">
+        依存関係はまだ解析されていません。
+      </div>
+    </section>
+  `;
+}
  if(currentPage==='code')v.innerHTML=codePage();
+ if(currentPage==='dependency')v.innerHTML=dependencyPage();
  if(currentPage==='settings')v.innerHTML=settingsPage();
 
  if(currentPage==='code'){
