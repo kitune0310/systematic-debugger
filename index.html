@@ -231,39 +231,47 @@ function analyzeDependencies(){
     /require\s*\(\s*['"]([^'"]+)['"]\s*\)/g
   ];
 
-  files.forEach(file=>{
+    files.forEach(file=>{
     if(!/\.(html?|js|mjs|cjs)$/i.test(file.name))return;
-    patterns.forEach(pattern=>{
-      pattern.lastIndex=0;
 
-      let match;
+    const sourceTexts=/\.html?$/i.test(file.name)
+      ? [...file.content.matchAll(
+          /<script\b[^>]*>([\s\S]*?)<\/script>/gi
+        )].map(match=>match[1])
+      : [file.content];
 
-      while((match=pattern.exec(file.content))!==null){
-        const path=match[1];
+    sourceTexts.forEach(source=>{
+      patterns.forEach(pattern=>{
+        pattern.lastIndex=0;
 
-        if(!path.startsWith('./')&&!path.startsWith('../')){
-          continue;
-        }
+        let match;
 
-        const targetName=path.split('/').pop();
+        while((match=pattern.exec(source))!==null){
+          const path=match[1];
 
-        const target=files.find(other=>{
-          return other.name===targetName||
-            other.name===targetName+'.js'||
-            other.name===targetName+'.mjs'||
-            other.name===targetName+'/index.js';
-        });
+          if(!path.startsWith('./')&&!path.startsWith('../')){
+            continue;
+          }
 
-        if(target&&target.id!==file.id){
-          edges.push({
-            from:file.name,
-            to:target.name
+          const targetName=path.split('/').pop();
+
+          const target=files.find(other=>{
+            return other.name===targetName||
+              other.name===targetName+'.js'||
+              other.name===targetName+'.mjs'||
+              other.name===targetName+'/index.js';
           });
+
+          if(target&&target.id!==file.id){
+            edges.push({
+              from:file.name,
+              to:target.name
+            });
+          }
         }
-      }
+      });
     });
   });
-
   const uniqueEdges=[
     ...new Map(
       edges.map(edge=>[
