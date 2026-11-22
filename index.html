@@ -287,21 +287,85 @@ function analyzeDependencies(){
     return;
   }
 
-  graph.innerHTML=`
-    <div class="project-list">
-      ${uniqueEdges.map(edge=>`
-        <div class="project">
-          <div class="project-main">
-            <div class="project-name">${esc(edge.from)}</div>
-            <div class="project-meta">
-              依存先：${esc(edge.to)}
-            </div>
-          </div>
-          <span class="tag">DEPENDENCY</span>
-        </div>
-      `).join('')}
-    </div>
-  `;
+  const nodes=[...new Set([
+  ...uniqueEdges.map(edge=>edge.from),
+  ...uniqueEdges.map(edge=>edge.to)
+])];
+
+const nodePositions={};
+const centerX=250;
+const centerY=180;
+const radius=120;
+
+nodes.forEach((name,index)=>{
+  const angle=(2*Math.PI*index/nodes.length)-Math.PI/2;
+
+  nodePositions[name]={
+    x:centerX+radius*Math.cos(angle),
+    y:centerY+radius*Math.sin(angle)
+  };
+});
+
+graph.innerHTML=`
+  <svg viewBox="0 0 500 360"
+       style="width:100%;min-height:300px">
+
+    <defs>
+      <marker id="dependencyArrow"
+              markerWidth="8"
+              markerHeight="8"
+              refX="6"
+              refY="3"
+              orient="auto">
+        <path d="M0 0 L6 3 L0 6" fill="#d6ad55"/>
+      </marker>
+    </defs>
+
+    ${uniqueEdges.map(edge=>{
+      const from=nodePositions[edge.from];
+      const to=nodePositions[edge.to];
+
+      return `
+        <line
+          x1="${from.x}"
+          y1="${from.y}"
+          x2="${to.x}"
+          y2="${to.y}"
+          stroke="#d6ad55"
+          stroke-width="2"
+          marker-end="url(#dependencyArrow)"
+        />
+      `;
+    }).join('')}
+
+    ${nodes.map((name,index)=>{
+      const pos=nodePositions[name];
+
+      return `
+        <g>
+          <rect
+            x="${pos.x-65}"
+            y="${pos.y-22}"
+            width="130"
+            height="44"
+            rx="8"
+            fill="#243448"
+            stroke="#d6ad55"
+            stroke-width="1.5"
+          />
+          <text
+            x="${pos.x}"
+            y="${pos.y+5}"
+            fill="#ffffff"
+            font-size="12"
+            text-anchor="middle"
+          >${esc(name)}</text>
+        </g>
+      `;
+    }).join('')}
+
+  </svg>
+`;
 }
  function render(){
  const v=document.getElementById('view');document.getElementById('crumb').textContent=({dashboard:'Dashboard',projects:'Projects',investigation:'Investigation',hypotheses:'Hypotheses',verification:'Verification',history:'History',code:'Code Viewer',settings:'Settings'})[currentPage]||'Project';
