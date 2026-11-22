@@ -728,6 +728,20 @@ function renderAICauses(causes){
     container.appendChild(item);
   });
 }
+function testAICauseDisplay(){
+  renderAICauses([
+    {
+      title:'変数の未定義',
+      confidence:'高',
+      detail:'使用されている変数が定義されていない可能性があります。'
+    },
+    {
+      title:'変数名の入力ミス',
+      confidence:'中',
+      detail:'宣言時と使用時で変数名が異なる可能性があります。'
+    }
+  ]);
+}
 function prepareAIAnalysis(){
   ensureCodeFiles();
 
