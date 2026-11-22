@@ -600,10 +600,43 @@ graph.onclick=function(event){
       <span class="tag">AI ASSISTANT</span>
     </div>
 
-    <div class="empty">
-      ここにエラー入力・原因候補・修正案を表示する機能を実装します。
-    </div>
-  </section>
+    <div class="field">
+  <label for="aiErrorInput">エラー内容</label>
+  <textarea
+    id="aiErrorInput"
+    placeholder="エラーメッセージやスタックトレースを入力してください。"
+    style="min-height:150px"
+  ></textarea>
+</div>
+
+<div class="field">
+  <label for="aiCodeFileSelect">解析対象のコードファイル</label>
+  <select id="aiCodeFileSelect">
+    <option value="">ファイルを選択してください</option>
+    ${state.codeFiles.map(file=>`
+      <option value="${esc(file.id)}">${esc(file.name)}</option>
+    `).join('')}
+  </select>
+</div>
+
+<div class="toolbar">
+  <button
+    class="btn primary"
+    type="button"
+    onclick="prepareAIAnalysis()"
+  >
+    解析を開始
+  </button>
+</div>
+
+<div
+  id="aiAnalysisStatus"
+  class="code-status"
+  style="margin-top:12px"
+>
+  解析待ち
+</div>
+</section>
 `;
  if(currentPage==='dependency')v.innerHTML=dependencyPage();
  if(currentPage==='settings')v.innerHTML=settingsPage();
@@ -612,6 +645,41 @@ graph.onclick=function(event){
    updateLineNumbers();
    syncLineScroll();
  }
+}
+function prepareAIAnalysis(){
+  ensureCodeFiles();
+
+  const errorInput=document.getElementById('aiErrorInput');
+  const fileSelect=document.getElementById('aiCodeFileSelect');
+  const status=document.getElementById('aiAnalysisStatus');
+
+  if(!errorInput||!fileSelect||!status)return;
+
+  const errorText=errorInput.value.trim();
+  const fileId=fileSelect.value;
+
+  if(!errorText){
+    status.textContent='エラー内容を入力してください。';
+    return;
+  }
+
+  if(!fileId){
+    status.textContent='解析対象のファイルを選択してください。';
+    return;
+  }
+
+  const file=state.codeFiles.find(item=>item.id===fileId);
+
+  if(!file){
+    status.textContent='選択されたファイルが見つかりません。';
+    return;
+  }
+
+  status.textContent=
+    '入力データを確認しました。'+
+    ' ファイル：'+file.name+
+    ' / エラー文字数：'+errorText.length+
+    '文字。AI解析機能は未接続です。';
 }
 function dashboard(){
  const active=state.projects.filter(p=>p.status==='進行中').length;
