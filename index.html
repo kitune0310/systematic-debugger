@@ -232,8 +232,7 @@ function analyzeDependencies(){
   ];
 
   files.forEach(file=>{
-    if(!/\.(js|mjs|cjs)$/i.test(file.name))return;
-
+    if(!/\.(html?|js|mjs|cjs)$/i.test(file.name))return;
     patterns.forEach(pattern=>{
       pattern.lastIndex=0;
 
