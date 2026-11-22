@@ -714,13 +714,31 @@ function prepareAIAnalysis(){
     return;
   }
 
+  const analysisInput={
+    error:errorText,
+    fileName:file.name,
+    code:file.content||'',
+    createdAt:new Date().toISOString()
+  };
+
+  document.getElementById('aiSeverity').textContent='未判定';
+  document.getElementById('aiConfidence').textContent='未判定';
+
+  document.getElementById('aiCause').textContent=
+    'AI解析の接続後に原因候補を表示します。';
+
+  document.getElementById('aiEvidence').textContent=
+    '対象ファイル：'+analysisInput.fileName+
+    ' / コード文字数：'+analysisInput.code.length+
+    '文字 / エラー文字数：'+analysisInput.error.length+'文字';
+
+  document.getElementById('aiFix').textContent=
+    'AI解析の接続後に修正案を表示します。';
+
   status.textContent=
-    '入力データを確認しました。'+
-    ' ファイル：'+file.name+
-    ' / エラー文字数：'+errorText.length+
-    '文字。AI解析機能は未接続です。';
+    '解析データを準備しました。AI機能はまだ未接続です。';
 }
-function dashboard(){
+ function dashboard(){
  const active=state.projects.filter(p=>p.status==='進行中').length;
  return `${pageHead('OVERVIEW / SYSTEM STATUS','Dashboard','プロジェクトとデバッグ作業の全体状況を確認します。',`<button class="btn primary" onclick="showModal()">＋ 新規プロジェクト</button>`)}
  <div class="grid stats">
