@@ -322,22 +322,47 @@ graph.innerHTML=`
     </defs>
 
     ${uniqueEdges.map(edge=>{
-      const from=nodePositions[edge.from];
-      const to=nodePositions[edge.to];
+  const from=nodePositions[edge.from];
+  const to=nodePositions[edge.to];
 
-      return `
-        <line
-          x1="${from.x}"
-          y1="${from.y}"
-          x2="${to.x}"
-          y2="${to.y}"
-          stroke="#d6ad55"
-          stroke-width="2"
-          marker-end="url(#dependencyArrow)"
-        />
-      `;
-    }).join('')}
+  const dx=to.x-from.x;
+  const dy=to.y-from.y;
+  const length=Math.sqrt(dx*dx+dy*dy);
 
+  const ux=dx/length;
+  const uy=dy/length;
+
+  const endX=to.x-70*ux;
+  const endY=to.y-27*uy;
+
+  const arrowLength=14;
+  const arrowWidth=8;
+
+  const baseX=endX-arrowLength*ux;
+  const baseY=endY-arrowLength*uy;
+
+  const leftX=baseX-arrowWidth*uy;
+  const leftY=baseY+arrowWidth*ux;
+
+  const rightX=baseX+arrowWidth*uy;
+  const rightY=baseY-arrowWidth*ux;
+
+  return `
+    <line
+      x1="${from.x}"
+      y1="${from.y}"
+      x2="${baseX}"
+      y2="${baseY}"
+      stroke="#d6ad55"
+      stroke-width="3"
+    />
+
+    <polygon
+      points="${endX},${endY} ${leftX},${leftY} ${rightX},${rightY}"
+      fill="#d6ad55"
+    />
+  `;
+}).join('')}
     ${nodes.map((name,index)=>{
       const pos=nodePositions[name];
 
