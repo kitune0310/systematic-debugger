@@ -367,8 +367,8 @@ graph.innerHTML=`
       const pos=nodePositions[name];
 
       return `
-        <g>
-          <rect
+  <g data-file="${esc(name)}" style="cursor:pointer">
+    <rect
             x="${pos.x-65}"
             y="${pos.y-22}"
             width="130"
