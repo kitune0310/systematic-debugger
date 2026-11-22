@@ -278,14 +278,7 @@ function analyzeDependencies(){
 
   if(uniqueEdges.length===0){
     graph.innerHTML=`
-    graph.onclick=function(event){
-  const node=event.target.closest('[data-file]');
-
-  if(!node)return;
-
-  const fileName=node.getAttribute('data-file');
-  openDependencyFile(fileName);
-};
+   
 
       <div class="empty">
         依存関係は見つかりませんでした。
@@ -400,7 +393,14 @@ graph.innerHTML=`
 
   </svg>
 `;
-}
+graph.onclick=function(event){
+  const node=event.target.closest('[data-file]');
+
+  if(!node)return;
+
+  const fileName=node.getAttribute('data-file');
+  openDependencyFile(fileName);
+};}
  function render(){
  const v=document.getElementById('view');document.getElementById('crumb').textContent=({dashboard:'Dashboard',projects:'Projects',investigation:'Investigation',hypotheses:'Hypotheses',verification:'Verification',history:'History',code:'Code Viewer',settings:'Settings'})[currentPage]||'Project';
  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));
