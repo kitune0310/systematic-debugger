@@ -174,6 +174,10 @@ main{min-width:0}.topbar{height:66px;border-bottom:1px solid var(--line);display
     <button data-page="history"><span class="ico">◷</span>History</button>
     <button data-page="code"><span class="ico">⌘</span>Code Viewer</button>
     <button data-page="dependency"><span class="ico">⌘</span>Dependency Graph</button>
+    <button data-page="ai">
+  <span class="ico">✦</span>
+  AI Debug Assistant
+</button>
   </nav></div>
   <div><div class="nav-label">SYSTEM</div><nav class="nav"><button data-page="settings"><span class="ico">⚙</span>Settings</button></nav></div>
   <div class="side-bottom"><small>STORAGE STATUS</small><div class="sync-line"><span class="dot"></span> Local storage active</div><div class="sync-line"><span class="dot pending"></span> Cloud sync not configured</div></div>
@@ -492,7 +496,7 @@ graph.onclick=function(event){
 };
 }
  function render(){
- const v=document.getElementById('view');document.getElementById('crumb').textContent=({dashboard:'Dashboard',projects:'Projects',investigation:'Investigation',hypotheses:'Hypotheses',verification:'Verification',history:'History',code:'Code Viewer',settings:'Settings'})[currentPage]||'Project';
+ const v=document.getElementById('view');document.getElementById('crumb').textContent=({dashboard:'Dashboard',projects:'Projects',investigation:'Investigation',hypotheses:'Hypotheses',verification:'Verification',history:'History',code:'Code Viewer',dependency:'Dependency Graph',ai:'AI Debug Assistant',settings:'Settings'})[currentPage]||'Project';
  document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===currentPage));
  if(currentPage==='dashboard')v.innerHTML=dashboard();
  if(currentPage==='projects')v.innerHTML=projectsPage();
@@ -577,6 +581,30 @@ graph.onclick=function(event){
   `;
 }
  if(currentPage==='code')v.innerHTML=codePage();
+ if(currentPage==='ai')v.innerHTML=`
+  ${pageHead(
+    'DEVELOPMENT / AI ANALYSIS',
+    'AI Debug Assistant',
+    'AIを活用してエラーの原因分析と修正案の作成を支援します。'
+  )}
+
+  <div class="notice">
+    AI DEBUG ASSISTANT
+    <br>
+    AIによる解析機能は現在準備中です。
+  </div>
+
+  <section class="card">
+    <div class="card-title">
+      <h2>ANALYSIS WORKSPACE</h2>
+      <span class="tag">AI ASSISTANT</span>
+    </div>
+
+    <div class="empty">
+      ここにエラー入力・原因候補・修正案を表示する機能を実装します。
+    </div>
+  </section>
+`;
  if(currentPage==='dependency')v.innerHTML=dependencyPage();
  if(currentPage==='settings')v.innerHTML=settingsPage();
 
