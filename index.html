@@ -768,11 +768,7 @@ function prepareAIAnalysis(){
   document.getElementById('aiSeverity').textContent='未判定';
   document.getElementById('aiConfidence').textContent='未判定';
 
-    document.getElementById('aiCause').innerHTML=`
-    <div class="empty">
-      AI解析の接続後に原因候補を表示します。
-    </div>
-  `;
+    renderAICauses([]);
   document.getElementById('aiEvidence').textContent=
     '対象ファイル：'+analysisInput.fileName+
     ' / コード文字数：'+analysisInput.code.length+
