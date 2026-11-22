@@ -626,6 +626,18 @@ function lineNumberText(v=''){return Array.from({length:Math.max(1,String(v).spl
 function languageLabel(n){const e=(n.split('.').pop()||'text').toLowerCase();return ({js:'JS',mjs:'JS',html:'HTML',htm:'HTML',css:'CSS',json:'JSON',md:'MD'})[e]||'TEXT'}
 function newCodeFile(){ensureCodeFiles();const name=prompt('ファイル名を入力してください（例：app.js）');if(!name)return;if(!/^[a-zA-Z0-9._-]+$/.test(name)){alert('ファイル名は英数字・ドット・ハイフン・アンダースコアで入力してください。');return}if(state.codeFiles.some(x=>x.name===name)){alert('同じ名前のファイルがあります。');return}const f={id:crypto.randomUUID(),name,content:'',original:'',updatedAt:new Date().toISOString()};state.codeFiles.push(f);activeCodeId=f.id;log(`コードファイル「${name}」を作成`);save();render()}
 function selectCodeFile(id){activeCodeId=id;render()}
+function openDependencyFile(fileName){
+  const file=state.codeFiles.find(f=>f.name===fileName);
+
+  if(!file){
+    alert('ファイルが見つかりません：'+fileName);
+    return;
+  }
+
+  activeCodeId=file.id;
+  currentPage='code';
+  render();
+}
 function uploadCodeFiles(files){if(!files?.length)return;ensureCodeFiles();const allowed=/\.(html?|css|m?js|json|txt|md)$/i;let pending=files.length;Array.from(files).forEach(file=>{if(!allowed.test(file.name)){alert(`${file.name}: 対応していない拡張子です。`);if(!--pending)finish();return}const reader=new FileReader();reader.onload=()=>{const old=state.codeFiles.find(x=>x.name===file.name);if(old){if(!confirm(`${file.name} は既にあります。置き換えますか？`)){if(!--pending)finish();return}old.content=String(reader.result);old.original=String(reader.result);old.updatedAt=new Date().toISOString();activeCodeId=old.id}else{const f={id:crypto.randomUUID(),name:file.name,content:String(reader.result),original:String(reader.result),updatedAt:new Date().toISOString()};state.codeFiles.push(f);activeCodeId=f.id}if(!--pending)finish()};reader.onerror=()=>{alert(`${file.name}を読み込めませんでした。`);if(!--pending)finish()}});function finish(){log('コードファイルを取り込み');save();render()}}
 
 function saveCodeFile(){
