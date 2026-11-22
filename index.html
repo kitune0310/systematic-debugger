@@ -234,34 +234,45 @@ function analyzeDependencies(){
     files.forEach(file=>{
     if(!/\.(html?|js|mjs|cjs)$/i.test(file.name))return;
 
-        if(/\.html?$/i.test(file.name)){
-      const scriptSrcPattern=
-        /<script\b[^>]*\bsrc\s*=\s*(['"])(.*?)\1[^>]*>/gi;
+     if(/\.html?$/i.test(file.name)){
+  const scriptSrcPattern=
+    /<script\b[^>]*\bsrc\s*=\s*(['"])(.*?)\1[^>]*>/gi;
 
-      let scriptMatch;
+  let scriptMatch;
 
-      while((scriptMatch=scriptSrcPattern.exec(file.content))!==null){
-        const src=scriptMatch[2].trim();
+  while((scriptMatch=scriptSrcPattern.exec(file.content))!==null){
+    const src=scriptMatch[2].trim();
 
-        if(!src||/^(?:[a-z]+:)?\/\//i.test(src)){
-          continue;
-        }
+    if(!src)continue;
 
-        const cleanPath=src.split(/[?#]/)[0];
-        const targetName=cleanPath.split('/').pop();
+    const externalMatch=src.match(
+      /^https?:\/\/([^/]+)\/?(.*)$/i
+    );
 
-        const target=files.find(other=>{
-          return other.name===targetName;
-        });
+    const cleanPath=src.split(/[?#]/)[0];
+    const targetName=cleanPath.split('/').pop();
 
-        if(target&&target.id!==file.id){
-          edges.push({
-            from:file.name,
-            to:target.name
-          });
-        }
-      }
+    if(externalMatch){
+      edges.push({
+        from:file.name,
+        to:`CDN: ${externalMatch[1]}/${targetName}`
+      });
+
+      continue;
     }
+
+    const target=files.find(other=>{
+      return other.name===targetName;
+    });
+
+    if(target&&target.id!==file.id){
+      edges.push({
+        from:file.name,
+        to:target.name
+      });
+    }
+  }
+}
 
     const sourceTexts=/\.html?$/i.test(file.name)
       ? [...file.content.matchAll(
