@@ -675,6 +675,102 @@ function openDependencyFile(fileName){
   currentPage='code';
   render();
 }
+
+async function loadGitHubRepository(){
+  const input=document.getElementById('githubRepoUrl');
+  const status=document.getElementById('githubRepoStatus');
+  const button=document.getElementById('loadGitHubRepoBtn');
+
+  const url=input.value.trim();
+  const match=url.match(
+    /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/?$/
+  );
+
+  if(!match){
+    status.textContent='正しいGitHubリポジトリURLを入力してください。';
+    return;
+  }
+
+  const owner=match[1];
+  const repo=match[2];
+
+  button.disabled=true;
+  status.textContent='リポジトリを確認しています...';
+
+  try{
+    const repoResponse=await fetch(
+      `https://api.github.com/repos/${owner}/${repo}`
+    );
+
+    if(!repoResponse.ok){
+      throw new Error('リポジトリが見つからないか、公開されていません。');
+    }
+
+    const repoData=await repoResponse.json();
+    const branch=repoData.default_branch;
+
+    const treeResponse=await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`
+    );
+
+    if(!treeResponse.ok){
+      throw new Error('ファイル一覧を取得できませんでした。');
+    }
+
+    const treeData=await treeResponse.json();
+
+    const files=treeData.tree.filter(file=>
+      file.type==='blob' &&
+      /\.(js|mjs|cjs)$/i.test(file.path)
+    ).slice(0,80);
+
+    let added=0;
+
+    for(const file of files){
+      const name=file.path.split('/').pop();
+
+      if(state.codeFiles.some(item=>item.name===name)){
+        continue;
+      }
+
+      const rawUrl=
+        `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${file.path.split('/').map(encodeURIComponent).join('/')}`;
+
+      const response=await fetch(rawUrl);
+
+      if(!response.ok)continue;
+
+      const content=await response.text();
+
+      state.codeFiles.push({
+        id:crypto.randomUUID(),
+        name,
+        content,
+        original:content,
+        updatedAt:new Date().toISOString()
+      });
+
+      added++;
+    }
+
+    save();
+    render();
+
+    const result=document.getElementById('githubRepoStatus');
+
+    result.textContent=
+      `読み込み完了：${added}ファイル追加 / ${files.length}ファイル確認`;
+
+    analyzeDependencies();
+
+  }catch(error){
+    status.textContent='読み込み失敗：'+error.message;
+
+  }finally{
+    button.disabled=false;
+  }
+}
+
 function uploadCodeFiles(files){if(!files?.length)return;ensureCodeFiles();const allowed=/\.(html?|css|m?js|json|txt|md)$/i;let pending=files.length;Array.from(files).forEach(file=>{if(!allowed.test(file.name)){alert(`${file.name}: 対応していない拡張子です。`);if(!--pending)finish();return}const reader=new FileReader();reader.onload=()=>{const old=state.codeFiles.find(x=>x.name===file.name);if(old){if(!confirm(`${file.name} は既にあります。置き換えますか？`)){if(!--pending)finish();return}old.content=String(reader.result);old.original=String(reader.result);old.updatedAt=new Date().toISOString();activeCodeId=old.id}else{const f={id:crypto.randomUUID(),name:file.name,content:String(reader.result),original:String(reader.result),updatedAt:new Date().toISOString()};state.codeFiles.push(f);activeCodeId=f.id}if(!--pending)finish()};reader.onerror=()=>{alert(`${file.name}を読み込めませんでした。`);if(!--pending)finish()}});function finish(){log('コードファイルを取り込み');save();render()}}
 
 function saveCodeFile(){
