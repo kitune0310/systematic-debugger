@@ -726,7 +726,8 @@ function prepareAIAnalysis(){
     code:file.content||'',
     createdAt:new Date().toISOString()
   };
-
+  document.getElementById('aiOverview').textContent=
+    '入力されたエラー：'+errorText;
   document.getElementById('aiSeverity').textContent='未判定';
   document.getElementById('aiConfidence').textContent='未判定';
 
