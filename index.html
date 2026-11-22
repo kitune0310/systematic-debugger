@@ -721,10 +721,9 @@ async function loadGitHubRepository(){
     const treeData=await treeResponse.json();
 
     const files=treeData.tree.filter(file=>
-      file.type==='blob' &&
-      /\.(js|mjs|cjs)$/i.test(file.path)
-    ).slice(0,80);
-
+  file.type==='blob' &&
+  /\.(html?|js|mjs|cjs)$/i.test(file.path)
+).slice(0,80);
     let added=0;
 
     for(const file of files){
