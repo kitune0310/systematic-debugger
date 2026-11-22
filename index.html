@@ -636,6 +636,45 @@ graph.onclick=function(event){
 >
   解析待ち
 </div>
+<section class="card" style="margin-top:16px">
+  <div class="card-title">
+    <h2>ANALYSIS RESULTS</h2>
+    <span class="tag">DIAGNOSTIC REPORT</span>
+  </div>
+
+  <div class="grid stats">
+    <div class="card">
+      <div class="stat-label">SEVERITY</div>
+      <div class="stat-value" id="aiSeverity">---</div>
+    </div>
+
+    <div class="card">
+      <div class="stat-label">CONFIDENCE</div>
+      <div class="stat-value" id="aiConfidence">---</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>原因候補</label>
+    <div id="aiCause" class="code-status">
+      解析結果はまだありません。
+    </div>
+  </div>
+
+  <div class="field">
+    <label>根拠</label>
+    <div id="aiEvidence" class="code-status">
+      解析結果はまだありません。
+    </div>
+  </div>
+
+  <div class="field">
+    <label>修正案</label>
+    <div id="aiFix" class="code-status">
+      解析結果はまだありません。
+    </div>
+  </div>
+</section>
 </section>
 `;
  if(currentPage==='dependency')v.innerHTML=dependencyPage();
