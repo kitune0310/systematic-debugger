@@ -695,6 +695,39 @@ graph.onclick=function(event){
    syncLineScroll();
  }
 }
+function renderAICauses(causes){
+  const container=document.getElementById('aiCause');
+
+  if(!container)return;
+
+  container.replaceChildren();
+
+  if(!Array.isArray(causes)||causes.length===0){
+    const empty=document.createElement('div');
+    empty.className='empty';
+    empty.textContent='原因候補はまだありません。';
+    container.appendChild(empty);
+    return;
+  }
+
+  causes.forEach((cause,index)=>{
+    const item=document.createElement('div');
+    item.className='code-status';
+    item.style.marginBottom='10px';
+
+    const title=document.createElement('strong');
+    title.textContent=(index+1)+'. '+(cause.title||'原因候補');
+
+    const confidence=document.createElement('div');
+    confidence.textContent='信頼度：'+(cause.confidence??'未判定');
+
+    const detail=document.createElement('p');
+    detail.textContent=cause.detail||'詳細情報はありません。';
+
+    item.append(title,confidence,detail);
+    container.appendChild(item);
+  });
+}
 function prepareAIAnalysis(){
   ensureCodeFiles();
 
