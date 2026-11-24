@@ -771,7 +771,20 @@ function renderAIEvidence(evidence){
     container.appendChild(row);
   });
 }
-
+function testAIEvidenceDisplay(){
+  renderAIEvidence([
+    {
+      fileName:'app.js',
+      line:15,
+      detail:'testValueが宣言されていない状態で使用されています。'
+    },
+    {
+      fileName:'index.html',
+      line:120,
+      detail:'イベント処理から未定義の関数が呼び出されている可能性があります。'
+    }
+  ]);
+}
 function testAICauseDisplay(){
   renderAICauses([
     {
