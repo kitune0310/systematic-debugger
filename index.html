@@ -778,7 +778,26 @@ function renderAIEvidence(evidence){
     container.appendChild(row);
   });
 }
-function renderAIFixes(fixes){
+function renderAIFixes(fixes)
+function testAIFixDisplay(){
+  renderAIFixes([
+    {
+      fileName:'app.js',
+      line:15,
+      reason:'変数が定義される前に使用されています。',
+      before:'console.log(testValue);',
+      after:'const testValue = "Hello";\nconsole.log(testValue);'
+    },
+    {
+      fileName:'index.html',
+      line:120,
+      reason:'存在しない関数が呼び出されています。',
+      before:'startApp();',
+      after:'initializeApp();'
+    }
+  ]);
+}
+  {
   const container=document.getElementById('aiFix');
 
   if(!container)return;
