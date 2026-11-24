@@ -778,6 +778,45 @@ function renderAIEvidence(evidence){
     container.appendChild(row);
   });
 }
+function renderAIFixes(fixes){
+  const container=document.getElementById('aiFix');
+
+  if(!container)return;
+
+  container.replaceChildren();
+
+  if(!Array.isArray(fixes)||fixes.length===0){
+    const empty=document.createElement('div');
+    empty.className='empty';
+    empty.textContent='修正案はまだありません。';
+    container.appendChild(empty);
+    return;
+  }
+
+  fixes.forEach((fix,index)=>{
+    const card=document.createElement('div');
+    card.className='code-status';
+    card.style.marginBottom='12px';
+
+    const title=document.createElement('strong');
+    title.textContent=(index+1)+'. '+(fix.fileName||'対象ファイル不明');
+
+    const line=document.createElement('div');
+    line.textContent='対象行：'+(fix.line??'不明');
+
+    const reason=document.createElement('p');
+    reason.textContent='修正理由：'+(fix.reason||'未設定');
+
+    const before=document.createElement('pre');
+    before.textContent='修正前：\n'+(fix.before||'未設定');
+
+    const after=document.createElement('pre');
+    after.textContent='修正後：\n'+(fix.after||'未設定');
+
+    card.append(title,line,reason,before,after);
+    container.appendChild(card);
+  });
+}
 function testAIEvidenceDisplay(){
   renderAIEvidence([
     {
