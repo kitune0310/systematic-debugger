@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
+<head
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#10151d">
@@ -717,6 +717,38 @@ graph.onclick=function(event){
    updateLineNumbers();
    syncLineScroll();
  }
+}
+function renderAIResults(result){
+  if(!result)return;
+
+  const overview=document.getElementById('aiOverview');
+  const severity=document.getElementById('aiSeverity');
+  const confidence=document.getElementById('aiConfidence');
+  const fix=document.getElementById('aiFix');
+
+  if(overview){
+    overview.textContent=result.overview||'概要はありません。';
+  }
+
+  if(severity){
+    severity.textContent=result.severity||'未判定';
+  }
+
+  if(confidence){
+    confidence.textContent=result.confidence||'未判定';
+  }
+
+  if(fix){
+    fix.textContent=result.fixes?.length
+      ? result.fixes.map((item,index)=>
+          (index+1)+'. '+item.fileName+
+          ' / '+item.reason
+        ).join('\n')
+      : '修正案はありません。';
+  }
+
+  renderAICauses(result.causes||[]);
+  renderAIEvidence(result.evidence||[]);
 }
 function renderAICauses(causes){
   const container=document.getElementById('aiCause');
