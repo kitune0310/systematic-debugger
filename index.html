@@ -695,9 +695,18 @@ graph.onclick=function(event){
 </button>
 <section class="card" style="margin-top:16px">
   <div class="card-title">
-    <h2>ANALYSIS RESULTS</h2>
+  <h2>ANALYSIS RESULTS</h2>
+  <div class="toolbar">
     <span class="tag">DIAGNOSTIC REPORT</span>
+    <button
+      class="btn primary"
+      type="button"
+      onclick="saveCurrentAIHistory()"
+    >
+      履歴へ保存
+    </button>
   </div>
+</div>
 
   <div class="grid stats">
     <div class="card">
