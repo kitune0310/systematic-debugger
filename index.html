@@ -209,7 +209,14 @@ main{min-width:0}.topbar{height:66px;border-bottom:1px solid var(--line);display
 
 <script>  
 const KEY='systematicDebugger.v1';
-const initial={projects:[],activities:[],issues:[],hypotheses:[],checks:[]};
+const initial={
+  projects:[],
+  activities:[],
+  issues:[],
+  hypotheses:[],
+  checks:[],
+  aiHistory:[]
+};
 let state=loadState(),currentPage='dashboard',selectedProject=null;
 function loadState(){try{return {...initial,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(e){return {...initial}}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
