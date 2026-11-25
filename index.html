@@ -220,6 +220,26 @@ const initial={
 let state=loadState(),currentPage='dashboard',selectedProject=null;
 function loadState(){try{return {...initial,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(e){return {...initial}}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
+function saveAIHistory(result,metadata={}){
+  if(!result)return;
+
+  const historyItem={
+    id:crypto.randomUUID(),
+    createdAt:new Date().toISOString(),
+    fileName:metadata.fileName||'ファイル不明',
+    error:metadata.error||'エラー情報なし',
+    result:JSON.parse(JSON.stringify(result))
+  };
+
+  state.aiHistory.unshift(historyItem);
+
+  // 履歴は最新100件まで保存
+  state.aiHistory=state.aiHistory.slice(0,100);
+
+  save();
+
+  return historyItem.id;
+}
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function dateLabel(v){return new Date(v).toLocaleDateString('ja-JP',{year:'numeric',month:'short',day:'numeric'})}
 function log(message){state.activities.unshift({message,at:new Date().toISOString()});state.activities=state.activities.slice(0,30);save()}
