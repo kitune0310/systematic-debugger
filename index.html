@@ -838,6 +838,8 @@ function renderAIHistory(){
   if(!container)return;
 
   const history=state.aiHistory||[];
+  const searchInput=document.getElementById('aiHistorySearch');
+  const keyword=(searchInput?.value||'').trim().toLowerCase();
 
   if(history.length===0){
     container.className='empty';
@@ -845,21 +847,42 @@ function renderAIHistory(){
     return;
   }
 
+  const filteredHistory=history.filter(item=>{
+    const result=item.result||{};
+
+    const searchText=[
+      result.overview,
+      item.fileName,
+      item.error,
+      result.severity
+    ].join(' ').toLowerCase();
+
+    return searchText.includes(keyword);
+  });
+
+  if(filteredHistory.length===0){
+    container.className='empty';
+    container.textContent='一致する解析履歴がありません。';
+    return;
+  }
+
   container.className='';
-  container.innerHTML=history.map(item=>`
+
+  container.innerHTML=filteredHistory.map(item=>`
     <div class="code-status" style="margin-bottom:10px">
       <strong>${esc(item.result?.overview||'解析結果')}</strong>
       <div>日時：${esc(new Date(item.createdAt).toLocaleString('ja-JP'))}</div>
       <div>ファイル：${esc(item.fileName)}</div>
       <div>重要度：${esc(item.result?.severity||'未判定')}</div>
+
       <div class="toolbar" style="margin-top:10px">
-  <button class="btn primary" onclick="loadAIHistory('${esc(item.id)}')">
-    再表示
-  </button>
-  <button class="btn" onclick="deleteAIHistory('${esc(item.id)}')">
-    削除
-  </button>
-</div>
+        <button class="btn primary" onclick="loadAIHistory('${esc(item.id)}')">
+          再表示
+        </button>
+        <button class="btn" onclick="deleteAIHistory('${esc(item.id)}')">
+          削除
+        </button>
+      </div>
     </div>
   `).join('');
 }
