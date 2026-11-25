@@ -241,6 +241,27 @@ function saveAIHistory(result,metadata={}){
 
   return historyItem.id;
 }
+function saveCurrentAIHistory(){
+  if(!currentAIResult){
+    alert('保存する解析結果がありません。一括表示テストなどで結果を表示してください。');
+    return;
+  }
+
+  const fileSelect=document.getElementById('aiCodeFileSelect');
+  const errorInput=document.getElementById('aiErrorInput');
+  const selectedFile=state.codeFiles?.find(file=>file.id===fileSelect?.value);
+
+  const id=saveAIHistory(currentAIResult,{
+    fileName:selectedFile?.name||currentAIResult.evidence?.[0]?.fileName||'ファイル不明',
+    error:errorInput?.value.trim()||currentAIResult.overview||'エラー情報なし'
+  });
+
+  if(id){
+    const status=document.getElementById('aiAnalysisStatus');
+    if(status)status.textContent='解析結果を履歴に保存しました。';
+    alert('AI解析履歴に保存しました。');
+  }
+}
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function dateLabel(v){return new Date(v).toLocaleDateString('ja-JP',{year:'numeric',month:'short',day:'numeric'})}
 function log(message){state.activities.unshift({message,at:new Date().toISOString()});state.activities=state.activities.slice(0,30);save()}
