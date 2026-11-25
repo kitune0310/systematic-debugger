@@ -744,11 +744,9 @@ function renderAIResults(result){
     confidence.textContent=result.confidence||'未判定';
   }
 
-    renderAIFixes(result.fixes||[]);
-}
-
   renderAICauses(result.causes||[]);
   renderAIEvidence(result.evidence||[]);
+  renderAIFixes(result.fixes||[]);
 }
 function renderAICauses(causes){
   const container=document.getElementById('aiCause');
