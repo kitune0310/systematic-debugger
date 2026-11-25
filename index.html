@@ -853,6 +853,36 @@ function renderAIHistory(){
     </div>
   `).join('');
 }
+function loadAIHistory(id){
+  const item=(state.aiHistory||[]).find(entry=>entry.id===id);
+
+  if(!item){
+    alert('履歴が見つかりません。');
+    return;
+  }
+
+  currentPage='ai';
+  render();
+  renderAIResults(item.result);
+
+  const status=document.getElementById('aiAnalysisStatus');
+  if(status){
+    status.textContent='保存された解析結果を再表示しました。';
+  }
+}
+
+function deleteAIHistory(id){
+  const item=(state.aiHistory||[]).find(entry=>entry.id===id);
+
+  if(!item)return;
+
+  if(!confirm('この解析履歴を削除しますか？'))return;
+
+  state.aiHistory=state.aiHistory.filter(entry=>entry.id!==id);
+
+  save();
+  renderAIHistory();
+}
 function renderAICauses(causes){
   const container=document.getElementById('aiCause');
 
