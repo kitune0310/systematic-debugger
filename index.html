@@ -784,9 +784,17 @@ graph.onclick=function(event){
     <span class="tag">SAVED REPORTS</span>
   </div>
 
-  <div id="aiHistoryList" class="empty">
-    保存された解析履歴はありません。
-  </div>
+  <input
+  type="text"
+  id="aiHistorySearch"
+  placeholder="エラー内容・ファイル名で検索..."
+  oninput="renderAIHistory()"
+  style="width:100%;margin-bottom:12px"
+>
+
+<div id="aiHistoryList" class="empty">
+  保存された解析履歴はありません。
+</div>
 </section>
 
  `;
