@@ -786,7 +786,10 @@ graph.onclick=function(event){
     保存された解析履歴はありません。
   </div>
 </section>
-`;
+
+ `;
+ renderAIHistory();
+
  if(currentPage==='dependency')v.innerHTML=dependencyPage();
  if(currentPage==='settings')v.innerHTML=settingsPage();
 
@@ -818,6 +821,29 @@ function renderAIResults(result){
   renderAICauses(result.causes||[]);
   renderAIEvidence(result.evidence||[]);
   renderAIFixes(result.fixes||[]);
+}
+function renderAIHistory(){
+  const container=document.getElementById('aiHistoryList');
+
+  if(!container)return;
+
+  const history=state.aiHistory||[];
+
+  if(history.length===0){
+    container.className='empty';
+    container.textContent='保存された解析履歴はありません。';
+    return;
+  }
+
+  container.className='';
+  container.innerHTML=history.map(item=>`
+    <div class="code-status" style="margin-bottom:10px">
+      <strong>${esc(item.result?.overview||'解析結果')}</strong>
+      <div>日時：${esc(new Date(item.createdAt).toLocaleString('ja-JP'))}</div>
+      <div>ファイル：${esc(item.fileName)}</div>
+      <div>重要度：${esc(item.result?.severity||'未判定')}</div>
+    </div>
+  `).join('');
 }
 function renderAICauses(causes){
   const container=document.getElementById('aiCause');
