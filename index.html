@@ -764,6 +764,7 @@ graph.onclick=function(event){
 }
 function renderAIResults(result){
   if(!result)return;
+  currentAIResult=JSON.parse(JSON.stringify(result));
 
   const overview=document.getElementById('aiOverview');
   const severity=document.getElementById('aiSeverity');
