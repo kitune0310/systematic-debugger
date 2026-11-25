@@ -842,6 +842,14 @@ function renderAIHistory(){
       <div>日時：${esc(new Date(item.createdAt).toLocaleString('ja-JP'))}</div>
       <div>ファイル：${esc(item.fileName)}</div>
       <div>重要度：${esc(item.result?.severity||'未判定')}</div>
+      <div class="toolbar" style="margin-top:10px">
+  <button class="btn primary" onclick="loadAIHistory('${esc(item.id)}')">
+    再表示
+  </button>
+  <button class="btn" onclick="deleteAIHistory('${esc(item.id)}')">
+    削除
+  </button>
+</div>
     </div>
   `).join('');
 }
