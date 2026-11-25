@@ -218,6 +218,7 @@ const initial={
   aiHistory:[]
 };
 let state=loadState(),currentPage='dashboard',selectedProject=null;
+let currentAIResult=null;
 function loadState(){try{return {...initial,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(e){return {...initial}}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}
 function saveAIHistory(result,metadata={}){
