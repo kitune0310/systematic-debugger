@@ -858,6 +858,9 @@ function testAIEvidenceDisplay(){
   ]);
 }
 function testAICauseDisplay(){
+  document.getElementById('aiOverview').textContent=
+    'テストエラー：testValue is not defined';
+
   renderAICauses([
     {
       title:'変数の未定義',
