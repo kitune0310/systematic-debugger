@@ -257,10 +257,12 @@ function saveCurrentAIHistory(){
   });
 
   if(id){
-    const status=document.getElementById('aiAnalysisStatus');
-    if(status)status.textContent='解析結果を履歴に保存しました。';
-    alert('AI解析履歴に保存しました。');
-  }
+  renderAIHistory();
+
+  const status=document.getElementById('aiAnalysisStatus');
+  if(status)status.textContent='解析結果を履歴に保存しました。';
+  alert('AI解析履歴に保存しました。');
+}
 }
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function dateLabel(v){return new Date(v).toLocaleDateString('ja-JP',{year:'numeric',month:'short',day:'numeric'})}
