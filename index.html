@@ -659,6 +659,13 @@ graph.onclick=function(event){
 >
   修正案の表示テスト
 </button>
+<button
+  class="btn primary"
+  type="button"
+  onclick="testAIResultsDisplay()"
+>
+  一括表示テスト
+</button>
 <section class="card" style="margin-top:16px">
   <div class="card-title">
     <h2>ANALYSIS RESULTS</h2>
@@ -881,6 +888,43 @@ function testAIEvidenceDisplay(){
       detail:'イベント処理から未定義の関数が呼び出されている可能性があります。'
     }
   ]);
+}
+function testAIResultsDisplay(){
+  const testResult={
+    overview:'testValue is not defined',
+    severity:'中',
+    confidence:'85%',
+    causes:[
+      {
+        title:'変数の未定義',
+        confidence:'高',
+        detail:'testValueが宣言されていません。'
+      },
+      {
+        title:'変数名の入力ミス',
+        confidence:'中',
+        detail:'変数名が一致していない可能性があります。'
+      }
+    ],
+    evidence:[
+      {
+        fileName:'app.js',
+        line:15,
+        detail:'testValueが宣言されていない状態で使用されています。'
+      }
+    ],
+    fixes:[
+      {
+        fileName:'app.js',
+        line:15,
+        reason:'変数を使用する前に宣言します。',
+        before:'console.log(testValue);',
+        after:'const testValue = "Hello";\nconsole.log(testValue);'
+      }
+    ]
+  };
+
+  renderAIResults(testResult);
 }
 function testAICauseDisplay(){
   document.getElementById('aiOverview').textContent=
